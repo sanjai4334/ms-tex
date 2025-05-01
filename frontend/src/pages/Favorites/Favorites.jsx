@@ -21,9 +21,18 @@ const Favorites = () => {
       <Typography variant="h4" sx={{ mb: 3 }}>
         My Favorites
       </Typography>
-      <Grid container spacing={3}>
+      <Grid 
+        container 
+        spacing={3} 
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: 3,
+          alignItems: 'stretch'
+        }}
+      >
         {favorites.map((product) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+          <Grid item key={product.id}>
             <ProductCard product={product} />
           </Grid>
         ))}

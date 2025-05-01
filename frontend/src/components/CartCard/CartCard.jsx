@@ -18,7 +18,7 @@ function CartCard({ item, onQuantityChange, onRemove }) {
 
   return (
     <Card sx={{ 
-      width: '280px',
+      width: '300px',  // Increased from 280px
       height: '420px',
       display: 'flex',
       flexDirection: 'column',

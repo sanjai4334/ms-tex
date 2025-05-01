@@ -27,7 +27,7 @@ function ProductCard({ product }) {
 
   return (
     <Card sx={{ 
-      width: '280px',
+      width: '300px',  // Increased from 280px
       height: '420px', // Increased height to accommodate larger image
       display: 'flex',
       flexDirection: 'column',
