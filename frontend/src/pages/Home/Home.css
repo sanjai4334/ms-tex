@@ -1,0 +1,21 @@
+.home {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-bar, .filter, .sort {
+  padding: 8px;
+  font-size: 14px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
