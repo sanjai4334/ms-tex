@@ -38,7 +38,8 @@ function Navbar({ isLoggedIn, children }) {
             width: drawerWidth,
             transition: 'width 0.3s',
             overflowX: 'hidden',
-            border: 'none',
+            borderRight: 1,
+            borderColor: 'divider'
           },
         }}
       >
@@ -196,7 +197,9 @@ function Navbar({ isLoggedIn, children }) {
           transition: 'left 0.3s',
         }}
       >
-        {children}
+        {React.Children.map(children, child =>
+          React.cloneElement(child, { isNavExpanded: !isCollapsed })
+        )}
       </Box>
     </Box>
   );

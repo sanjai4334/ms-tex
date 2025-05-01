@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, TextField, Select, MenuItem, Grid, Typography, InputLabel, FormControl } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import SearchFilters from '../../components/SearchFilters/SearchFilters';
 import ProductCard from '../../components/Card/Card';
 import { fetchProducts } from '../../store/slices/productSlice';
+import TopSearchBar from '../../components/TopSearchBar/TopSearchBar';
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -10,6 +12,9 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('');
   const [sortOption, setSortOption] = useState('');
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [ratingFilter, setRatingFilter] = useState(0);
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   useEffect(() => {
     if (status === 'idle') {
@@ -17,124 +22,82 @@ const Home = () => {
     }
   }, [status, dispatch]);
 
-  const handleSearchChange = (e) => setSearchQuery(e.target.value);
-  const handleFilterChange = (e) => setFilter(e.target.value);
-  const handleSortChange = (e) => setSortOption(e.target.value);
+  const maxPrice = useMemo(() => {
+    return Math.max(...products.map(p => p.price));
+  }, [products]);
+
+  const categories = useMemo(() => {
+    const uniqueCategories = [...new Set(products.map(product => product.category))];
+    return uniqueCategories.filter(Boolean);
+  }, [products]);
 
   const filteredAndSortedProducts = useMemo(() => {
     return products
       .filter(product => {
-        // Apply search filter
         const matchesSearch = product.title.toLowerCase()
           .includes(searchQuery.toLowerCase());
-
-        // Apply category filter
         const matchesCategory = !filter || product.category === filter;
+        const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
+        const matchesRating = product.rating.rate >= ratingFilter;
+        const matchesStock = !inStockOnly || product.stock > 0;
 
-        return matchesSearch && matchesCategory;
+        return matchesSearch && matchesCategory && matchesPrice && matchesRating && matchesStock;
       })
       .sort((a, b) => {
-        // Apply sorting
-        if (!sortOption) return 0;
-        
-        if (sortOption === 'asc') {
-          return a.price - b.price;
-        } else if (sortOption === 'desc') {
-          return b.price - a.price;
+        switch (sortOption) {
+          case 'price_asc': return a.price - b.price;
+          case 'price_desc': return b.price - a.price;
+          case 'rating': return b.rating.rate - a.rating.rate;
+          case 'stock': return b.stock - a.stock;
+          default: return 0;
         }
-        return 0;
       });
-  }, [products, searchQuery, filter, sortOption]);
+  }, [products, searchQuery, filter, sortOption, priceRange, ratingFilter, inStockOnly]);
 
-  // Get unique categories from products
-  const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(products.map(product => product.category))];
-    return uniqueCategories.filter(Boolean); // Remove any undefined/null values
-  }, [products]);
-
-  if (status === 'loading') {
-    return <Typography>Loading...</Typography>;
-  }
-
-  if (status === 'failed') {
-    return <Typography color="error">Error: {error}</Typography>;
-  }
+  if (status === 'loading') return <Typography>Loading...</Typography>;
+  if (status === 'failed') return <Typography color="error">Error: {error}</Typography>;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <Box
-        sx={{
-          borderBottom: 1,
-          borderColor: 'divider',
-          backgroundColor: 'background.paper',
-          display: 'flex',
-          gap: '1rem',
-          p: 1.5,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
-        <TextField
-          size="small"
-          label="Search products"
-          variant="outlined"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          sx={{ flex: 1, minWidth: '200px' }}
+    <Box sx={{ height: '100%', display: 'flex' }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <TopSearchBar 
+          searchQuery={searchQuery}
+          onSearchChange={(e) => setSearchQuery(e.target.value)}
         />
-        <FormControl size="small" sx={{ flex: 1, minWidth: '150px' }}>
-          <InputLabel>Category</InputLabel>
-          <Select
-            value={filter}
-            onChange={handleFilterChange}
-            label="Category"
-          >
-            <MenuItem value="">All Categories</MenuItem>
-            {categories.map(category => (
-              <MenuItem key={category} value={category}>
-                {category}
-              </MenuItem>
+        
+        <Box sx={{ flex: 1, overflow: 'auto' }}>
+          <Box sx={{
+            p: 2,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: 3,
+          }}>
+            {filteredAndSortedProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ flex: 1, minWidth: '150px' }}>
-          <InputLabel>Sort By</InputLabel>
-          <Select
-            value={sortOption}
-            onChange={handleSortChange}
-            label="Sort By"
-          >
-            <MenuItem value="">None</MenuItem>
-            <MenuItem value="asc">Price: Low to High</MenuItem>
-            <MenuItem value="desc">Price: High to Low</MenuItem>
-          </Select>
-        </FormControl>
+          </Box>
+        </Box>
       </Box>
 
-      <Box sx={{ overflow: 'auto', flex: 1, p: 2 }}>
-        {filteredAndSortedProducts.length === 0 ? (
-          <Typography variant="h6" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-            No products found matching your criteria
-          </Typography>
-        ) : (
-          <Grid 
-            container 
-            spacing={3} 
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: 3,
-              alignItems: 'stretch'
-            }}
-          >
-            {filteredAndSortedProducts.map((product) => (
-              <Grid item key={product.id}>
-                <ProductCard product={product} />
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Box>
+      <SearchFilters
+        filter={filter}
+        sortOption={sortOption}
+        priceRange={priceRange}
+        ratingFilter={ratingFilter}
+        inStockOnly={inStockOnly}
+        maxPrice={maxPrice}
+        categories={categories}
+        onFilterChange={(e) => setFilter(e.target.value)}
+        onSortChange={(e) => setSortOption(e.target.value)}
+        onPriceChange={(_, newValue) => setPriceRange(newValue)}
+        onRatingChange={(_, newValue) => setRatingFilter(newValue)}
+        onInStockChange={(e) => setInStockOnly(e.target.checked)}
+        onClearCategory={() => setFilter('')}
+        onClearSort={() => setSortOption('')}
+        onClearPriceRange={() => setPriceRange([0, maxPrice])}
+        onClearRating={() => setRatingFilter(0)}
+        onClearInStock={() => setInStockOnly(false)}
+      />
     </Box>
   );
 };
