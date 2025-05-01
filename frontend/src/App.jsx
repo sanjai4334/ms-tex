@@ -4,6 +4,7 @@ import Navbar from './components/Navbar/Navbar';
 import Home from './pages/Home/Home';
 import Favorites from './pages/Favorites/Favorites';
 import Cart from './pages/Cart/Cart';
+import ProductDetails from './pages/ProductDetails/ProductDetails';
 
 function App() {
   const isLoggedIn = true;
@@ -16,6 +17,7 @@ function App() {
           <Route path="/shop" element={<Home />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
         </Routes>
       </Navbar>
     </BrowserRouter>

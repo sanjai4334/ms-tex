@@ -8,23 +8,40 @@ import {
   IconButton 
 } from '@mui/material';
 import { AddCircleOutline, RemoveCircleOutline, Delete } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 function CartCard({ item, onQuantityChange, onRemove }) {
   const [imgSrc, setImgSrc] = useState(item.image);
+  const navigate = useNavigate();
 
   const handleImageError = () => {
     setImgSrc('https://placehold.co/280x250/png?text=Product+Image');
   };
 
+  const handleCardClick = (e) => {
+    // Prevent navigation if clicking on action buttons
+    if (e.target.closest('button')) {
+      return;
+    }
+    navigate(`/product/${item.id}`);
+  };
+
   return (
-    <Card sx={{ 
-      width: '300px',  // Increased from 280px
-      height: '420px',
-      display: 'flex',
-      flexDirection: 'column',
-      boxShadow: 3,
-      m: 'auto'
-    }}>
+    <Card 
+      sx={{ 
+        width: '300px',
+        height: '420px',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: 3,
+        m: 'auto',
+        cursor: 'pointer',
+        '&:hover': {
+          boxShadow: 6
+        }
+      }}
+      onClick={handleCardClick}
+    >
       <Box sx={{ 
         height: '250px',
         width: '100%',

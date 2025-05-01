@@ -4,9 +4,11 @@ import { Card, CardMedia, CardContent, Typography, Box, IconButton, Badge } from
 import { Favorite, FavoriteBorder, AddShoppingCart, ShoppingCart } from '@mui/icons-material';
 import { toggleFavorite } from '../../store/slices/favoritesSlice';
 import { addToCart } from '../../store/slices/cartSlice';
+import { useNavigate } from 'react-router-dom';
 
 function ProductCard({ product }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const favorites = useSelector(state => state.favorites.items);
   const cartItems = useSelector(state => state.cart.items);
   const isFavorite = favorites.some(item => item.id === product.id);
@@ -25,15 +27,30 @@ function ProductCard({ product }) {
     setImgSrc('https://placehold.co/280x250/png?text=Product+Image');
   };
 
+  const handleCardClick = (e) => {
+    // Prevent navigation if clicking on action buttons
+    if (e.target.closest('button')) {
+      return;
+    }
+    navigate(`/product/${product.id}`);
+  };
+
   return (
-    <Card sx={{ 
-      width: '300px',  // Increased from 280px
-      height: '420px', // Increased height to accommodate larger image
-      display: 'flex',
-      flexDirection: 'column',
-      boxShadow: 3,
-      m: 'auto'
-    }}>
+    <Card 
+      sx={{ 
+        width: '300px',
+        height: '420px',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: 3,
+        m: 'auto',
+        cursor: 'pointer',
+        '&:hover': {
+          boxShadow: 6
+        }
+      }}
+      onClick={handleCardClick}
+    >
       <Box sx={{ 
         height: '250px', // Increased image container height
         width: '100%',
