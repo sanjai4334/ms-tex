@@ -81,7 +81,7 @@ const Cart = () => {
                   Subtotal ({cartItems.length} items)
                 </Typography>
                 <Typography variant="body1">
-                  ${subtotal.toFixed(2)}
+                  ₹{subtotal.toLocaleString('en-IN')}
                 </Typography>
               </Box>
               <Box sx={{ 
@@ -94,11 +94,11 @@ const Cart = () => {
                 </Typography>
                 <Box sx={{ textAlign: 'right' }}>
                   <Typography variant="h6" color="primary.main">
-                    ${total.toFixed(2)}
+                    ₹{total.toLocaleString('en-IN')}
                   </Typography>
-                  {subtotal < 100 && (
+                  {subtotal < 10000 && (
                     <Typography variant="caption" color="success.main" sx={{ display: 'block' }}>
-                      Add ${(100 - subtotal).toFixed(2)} for free shipping
+                      Add ₹{(10000 - subtotal).toLocaleString('en-IN')} for free shipping
                     </Typography>
                   )}
                 </Box>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, CardMedia, CardContent, Typography, Box, IconButton, Badge } from '@mui/material';
+import { Card, CardMedia, CardContent, Typography, Box, IconButton, Badge, Chip } from '@mui/material';
 import { Favorite, FavoriteBorder, AddShoppingCart, ShoppingCart } from '@mui/icons-material';
 import { toggleFavorite } from '../../store/slices/favoritesSlice';
 import { addToCart } from '../../store/slices/cartSlice';
@@ -87,6 +87,23 @@ function ProductCard({ product }) {
           alt={product.title}
           onError={handleImageError}
         />
+        <Chip
+          label={product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+          color={product.stock > 0 ? "success" : "error"}
+          size="small"
+          sx={{
+            position: 'absolute',
+            bottom: 8,
+            right: 8,
+            backgroundColor: theme => 
+              `${product.stock > 0 
+                ? theme.palette.success.main 
+                : theme.palette.error.main}80`, // 80 is hex for 50% opacity
+            color: 'white',
+            fontWeight: 'bold',
+            backdropFilter: 'blur(4px)',
+          }}
+        />
       </Box>
       <CardContent sx={{ 
         flexGrow: 1,
@@ -116,12 +133,13 @@ function ProductCard({ product }) {
             color="success.main" 
             sx={{ mb: 1 }}
           >
-            Price: ${product.price.toFixed(2)}
+            Price: ₹{product.price.toLocaleString('en-IN')}
           </Typography>
           <Box sx={{ 
             display: 'flex', 
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            mt: 1
           }}>
             <Typography variant="body2" color="text.secondary">
               ⭐ {product.rating.rate} ({product.rating.count})
@@ -138,7 +156,6 @@ function ProductCard({ product }) {
               <IconButton 
                 color={cartItem ? "primary" : "default"}
                 size="small"
-                sx={{ ml: 1 }}
                 onClick={handleAddToCart}
               >
                 {cartItem ? <ShoppingCart /> : <AddShoppingCart />}

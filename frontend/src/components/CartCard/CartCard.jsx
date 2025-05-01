@@ -5,7 +5,8 @@ import {
   CardContent, 
   Typography, 
   Box, 
-  IconButton 
+  IconButton,
+  Chip 
 } from '@mui/material';
 import { AddCircleOutline, RemoveCircleOutline, Delete } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -78,6 +79,23 @@ function CartCard({ item, onQuantityChange, onRemove }) {
         >
           <Delete />
         </IconButton>
+        <Chip
+          label={item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
+          color={item.stock > 0 ? "success" : "error"}
+          size="small"
+          sx={{
+            position: 'absolute',
+            bottom: 8,
+            right: 8,
+            backgroundColor: theme => 
+              `${item.stock > 0 
+                ? theme.palette.success.main 
+                : theme.palette.error.main}80`,
+            color: 'white',
+            fontWeight: 'bold',
+            backdropFilter: 'blur(4px)',
+          }}
+        />
       </Box>
       <CardContent sx={{ 
         flexGrow: 1,
@@ -107,7 +125,7 @@ function CartCard({ item, onQuantityChange, onRemove }) {
             color="success.main" 
             sx={{ mb: 1 }}
           >
-            Price: ${(item.price * item.quantity).toFixed(2)}
+            Price: ₹{(item.price * item.quantity).toLocaleString('en-IN')}
           </Typography>
           <Box sx={{ 
             display: 'flex', 

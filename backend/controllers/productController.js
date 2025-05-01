@@ -34,6 +34,11 @@ const getProductById = async (req, res) => {
 const createProduct = async (req, res) => {
   console.log("POST /api/products - Creating product with data:", req.body);
   try {
+    // Ensure stock is a non-negative number
+    if (req.body.stock < 0) {
+      return res.status(400).json({ message: "Stock cannot be negative" });
+    }
+
     const newProduct = new Product(req.body);
 
     // Validate product before saving
@@ -84,10 +89,37 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// Add a new controller method to update stock
+const updateStock = async (req, res) => {
+  console.log('PATCH /api/products/:id/stock - Updating stock:', req.body);
+  try {
+    const { stock } = req.body;
+    if (stock < 0) {
+      return res.status(400).json({ message: "Stock cannot be negative" });
+    }
+
+    const product = await Product.findOneAndUpdate(
+      { id: parseInt(req.params.id) },
+      { stock },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json(product);
+  } catch (error) {
+    console.error('Error updating stock:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  updateStock
 };

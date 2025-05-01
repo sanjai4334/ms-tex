@@ -126,7 +126,8 @@ const ProductDetails = () => {
             justifyContent: 'center',
             overflow: 'hidden',
             minHeight: 0, // Important for proper flex behavior
-            maxWidth: '35%' // Ensure paper doesn't grow beyond flex basis
+            maxWidth: '35%', // Ensure paper doesn't grow beyond flex basis
+            position: 'relative' // Added for chip positioning
           }}
         >
           {imgLoading && (
@@ -143,6 +144,24 @@ const ProductDetails = () => {
               maxHeight: '100%',
               objectFit: 'contain',
               display: imgLoading ? 'none' : 'block'
+            }}
+          />
+          <Chip
+            label={product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+            color={product.stock > 0 ? "success" : "error"}
+            size="small"
+            sx={{
+              position: 'absolute',
+              bottom: 16,
+              right: 16,
+              backgroundColor: theme => 
+                `${product.stock > 0 
+                  ? theme.palette.success.main 
+                  : theme.palette.error.main}80`,
+              color: 'white',
+              fontWeight: 'bold',
+              backdropFilter: 'blur(4px)',
+              zIndex: 1
             }}
           />
         </Paper>
@@ -201,7 +220,15 @@ const ProductDetails = () => {
             </Box>
             
             <Typography variant="h4" color="primary" sx={{ mb: 2 }}>
-              ${product.price.toFixed(2)}
+              ₹{product.price.toLocaleString('en-IN')}
+            </Typography>
+
+            <Typography 
+              variant="h6" 
+              color={product.stock > 0 ? "success.main" : "error.main"}
+              sx={{ mb: 2 }}
+            >
+              {product.stock > 0 ? `${product.stock} items in stock` : 'Currently Out of Stock'}
             </Typography>
             
             <Divider sx={{ my: 2 }} />
