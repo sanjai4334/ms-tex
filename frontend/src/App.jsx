@@ -5,21 +5,30 @@ import Home from './pages/Home/Home';
 import Favorites from './pages/Favorites/Favorites';
 import Cart from './pages/Cart/Cart';
 import ProductDetails from './pages/ProductDetails/ProductDetails';
+import Admin from './pages/admin/admin'
 
 function App() {
   const isLoggedIn = true;
 
   return (
     <BrowserRouter>
-      <Navbar isLoggedIn={isLoggedIn}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/shop" replace />} />
-          <Route path="/shop" element={<Home />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/product/:id" element={<ProductDetails />} />
-        </Routes>
-      </Navbar>
+      <Routes>
+        <Route
+          path="/*"
+          element={
+            <Navbar isLoggedIn={isLoggedIn}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/shop" replace />} />
+                <Route path="/shop" element={<Home />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/product/:id" element={<ProductDetails />} />
+              </Routes>
+            </Navbar>
+          }
+        />
+        <Route path="/admin/*" element={<Admin />} />
+      </Routes>
     </BrowserRouter>
   );
 }

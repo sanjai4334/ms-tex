@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import SearchFilters from '../../components/SearchFilters/SearchFilters';
 import ProductCard from '../../components/Card/Card';
 import { fetchProducts } from '../../store/slices/productSlice';
@@ -17,21 +17,30 @@ const Home = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 Redux State:', {
+      status,
+      productsCount: products?.length || 0,
+      error
+    });
+    
     if (status === 'idle') {
+      console.log('🚀 Dispatching fetchProducts...');
       dispatch(fetchProducts());
     }
   }, [status, dispatch]);
 
   const maxPrice = useMemo(() => {
-    return Math.max(...products.map(p => p.price));
+    return products?.length ? Math.max(...products.map(p => p.price)) : 10000;
   }, [products]);
 
   const categories = useMemo(() => {
+    if (!products?.length) return [];
     const uniqueCategories = [...new Set(products.map(product => product.category))];
     return uniqueCategories.filter(Boolean);
   }, [products]);
 
   const filteredAndSortedProducts = useMemo(() => {
+    if (!products?.length) return [];
     return products
       .filter(product => {
         const matchesSearch = product.title.toLowerCase()
@@ -54,8 +63,54 @@ const Home = () => {
       });
   }, [products, searchQuery, filter, sortOption, priceRange, ratingFilter, inStockOnly]);
 
-  if (status === 'loading') return <Typography>Loading...</Typography>;
-  if (status === 'failed') return <Typography color="error">Error: {error}</Typography>;
+  if (status === 'loading') {
+    return (
+      <Box sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <Typography variant="h5">Loading products...</Typography>
+      </Box>
+    );
+  }
+
+  if (status === 'failed') {
+    return (
+      <Box sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        gap: 2 
+      }}>
+        <Typography variant="h5" color="error">
+          Error: {error}
+        </Typography>
+        <Button 
+          variant="contained" 
+          onClick={() => dispatch(fetchProducts())}
+        >
+          Retry Loading Products
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!products?.length) {
+    return (
+      <Box sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <Typography variant="h5">No products found</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ height: '100%', display: 'flex' }}>

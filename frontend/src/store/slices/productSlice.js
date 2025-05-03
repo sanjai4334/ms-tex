@@ -5,34 +5,20 @@ export const fetchProducts = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      console.log('🚀 Starting API call...');
-      console.log('📍 API URL:', apiUrl);
-      
-      if (!apiUrl) {
-        throw new Error('API URL not configured. Check .env file.');
-      }
+      console.log('🔍 Fetching products from:', apiUrl);
 
-      const response = await fetch(`${apiUrl}/products`);
-      
-      console.log('📡 Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries([...response.headers.entries()]),
-      });
+      const response = await fetch(`${apiUrl}/api/products`);
+      console.log('📡 Response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('✅ Parsed data:', data);
+      console.log('✅ Products received:', data);
       return data;
     } catch (error) {
-      console.error('❌ Fetch error:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
+      console.error('❌ Error fetching products:', error);
       return rejectWithValue(error.message);
     }
   }
