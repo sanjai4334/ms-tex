@@ -2,22 +2,11 @@ const Product = require("../models/productModel");
 
 // @desc    Get all products
 const getAllProducts = async (req, res) => {
+  console.log("GET /api/products - Fetching all products");
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const total = await Product.countDocuments();
-    const products = await Product.find()
-      .skip(skip)
-      .limit(limit);
-
-    res.json({
-      products,
-      total,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit)
-    });
+    const products = await Product.find();
+    console.log(`Found ${products.length} products`);
+    res.json(products);
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ message: error.message });
@@ -75,43 +64,16 @@ const createProduct = async (req, res) => {
 // @desc    Update existing product
 const updateProduct = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
-
-    // Validate the input
-    if (!updates.title || !updates.price || !updates.category) {
-      return res.status(400).json({ 
-        message: 'Required fields missing' 
-      });
-    }
-
-    // Try to find by MongoDB _id first, then by numeric id
-    let product = await Product.findByIdAndUpdate(
-      id,
-      updates,
-      { new: true, runValidators: true }
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
     );
-
-    // If not found by _id, try numeric id
-    if (!product) {
-      product = await Product.findOneAndUpdate(
-        { id: parseInt(id) },
-        updates,
-        { new: true, runValidators: true }
-      );
-    }
-
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    console.log('Product updated successfully:', product);
-    res.json(product);
+    if (!updatedProduct)
+      return res.status(404).json({ message: "Product not found" });
+    res.json(updatedProduct);
   } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(400).json({ 
-      message: error.message || 'Failed to update product'
-    });
+    res.status(400).json({ message: error.message });
   }
 };
 

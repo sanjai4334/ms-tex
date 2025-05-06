@@ -7,7 +7,7 @@ export const fetchProducts = createAsyncThunk(
       const apiUrl = import.meta.env.VITE_API_URL;
       console.log('🔍 Fetching products from:', apiUrl);
 
-      const response = await fetch(`${apiUrl}/api/products`);
+      const response = await fetch(`${apiUrl}/products`);
       console.log('📡 Response status:', response.status);
 
       if (!response.ok) {
