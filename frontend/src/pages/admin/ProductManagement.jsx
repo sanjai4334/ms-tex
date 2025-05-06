@@ -1,387 +1,527 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import api from './api/axios';
-import './admin.css';
-
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/150'; // Fallback image URL
-
-const ProductPreviewCard = ({ data }) => (
-  <div className="preview-card">
-    <div className="preview-image-container">
-      <img 
-        src={data.image || PLACEHOLDER_IMAGE}
-        alt="Preview"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = PLACEHOLDER_IMAGE;
-        }}
-      />
-      <div className="preview-stock">
-        {data.stock > 0 ? `${data.stock} in stock` : 'Out of stock'}
-      </div>
-    </div>
-    <div className="preview-content">
-      <h3>{data.title || 'Product Title'}</h3>
-      <p className="preview-description">{data.description || 'Product Description'}</p>
-      <div className="preview-details">
-        <p className="preview-price">₹{data.price || '0'}</p>
-        <p className="preview-rating">⭐ {data.rating?.rate || '0'} ({data.rating?.count || '0'})</p>
-      </div>
-      <p className="preview-category">{data.category || 'Category'}</p>
-    </div>
-  </div>
-);
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProducts } from '../../store/slices/productSlice';
+import ProductCard from '../../components/Card/Card'; // Adjust path to your ProductCard component
+import './ProductManagement.css';
 
 function ProductManagement() {
-  const [products, setProducts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const limit = 10;
+  const dispatch = useDispatch();
+  const { items: products, status, error } = useSelector((state) => state.products);
 
+  // State for form, pagination, and filtering
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
   const [formData, setFormData] = useState({
-    id: '',
     title: '',
-    price: '',
     description: '',
     category: '',
+    price: '',
+    stock: '',
     image: '',
-    rating: {
-      rate: 0,
-      count: 0
-    },
-    stock: ''
+    rating: { rate: '', count: '' },
   });
+  const [formError, setFormError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filter, setFilter] = useState({
+    title: '',
+    category: '',
+    minPrice: '',
+    maxPrice: '',
+  });
+  const productsPerPage = 10;
 
   useEffect(() => {
-    fetchProducts();
-  }, [currentPage]);
-
-  // Update the fetchProducts function to maintain previous data during loading
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/api/products?page=${currentPage}&limit=${limit}`);
-      if (response.data) {
-        setProducts(Array.isArray(response.data.products) ? response.data.products : []);
-        setTotalPages(Math.ceil(response.data.total / limit));
-        setError(null);
-      }
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setError('Failed to fetch products');
-      // Don't clear products on error to maintain current view
-    } finally {
-      setLoading(false);
+    if (status === 'idle') {
+      dispatch(fetchProducts());
     }
+    setCurrentPage(1);
+  }, [status, dispatch, filter]);
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name.startsWith('rating.')) {
+      const ratingField = name.split('.')[1];
+      setFormData((prev) => ({
+        ...prev,
+        rating: { ...prev.rating, [ratingField]: value },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+    setFormError(null);
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/api/products', formData);
-      fetchProducts();
-      setFormData({
-        id: '',
-        title: '',
-        price: '',
-        description: '',
-        category: '',
-        image: '',
-        rating: {
-          rate: 0,
-          count: 0
-        },
-        stock: ''
-      });
-    } catch (error) {
-      console.error('Error creating product:', error);
-    }
+  // Handle filter input changes
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilter((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleUpdate = async (e) => {
+  // Clear filter inputs
+  const clearFilters = () => {
+    setFilter({
+      title: '',
+      category: '',
+      minPrice: '',
+      maxPrice: '',
+    });
+  };
+
+  // Handle form submission for adding or updating a product
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError(null);
     try {
-      const updatedData = {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const productData = {
         title: formData.title,
-        price: Number(formData.price),
         description: formData.description,
         category: formData.category,
-        image: formData.image,
-        stock: Number(formData.stock),
+        price: parseFloat(formData.price) || 0,
+        stock: parseInt(formData.stock) || 0,
+        image: formData.image || '',
         rating: {
-          rate: Number(formData.rating.rate),
-          count: Number(formData.rating.count)
-        }
+          rate: parseFloat(formData.rating.rate) || 0,
+          count: parseInt(formData.rating.count) || 0,
+        },
       };
 
-      // Use MongoDB _id if available, fallback to numeric id
-      const productId = selectedProduct._id || selectedProduct.id;
-      
-      console.log('Updating product:', productId, 'with data:', updatedData);
-      
-      const response = await api.put(`/api/products/${productId}`, updatedData);
-      
-      if (response.data) {
-        console.log('Product updated successfully:', response.data);
-        await fetchProducts();
-        setSelectedProduct(null);
-        setFormData({
-          id: '',
-          title: '',
-          price: '',
-          description: '',
-          category: '',
-          image: '',
-          rating: {
-            rate: 0,
-            count: 0
-          },
-          stock: ''
+      // Client-side validation
+      if (!productData.title) {
+        throw new Error('Title is required');
+      }
+      if (!productData.description) {
+        throw new Error('Description is required');
+      }
+      if (!productData.category) {
+        throw new Error('Category is required');
+      }
+      if (productData.price <= 0) {
+        throw new Error('Price must be greater than 0');
+      }
+      if (productData.stock < 0) {
+        throw new Error('Stock cannot be negative');
+      }
+      if (productData.rating.rate < 0 || productData.rating.rate > 5) {
+        throw new Error('Rating must be between 0 and 5');
+      }
+      if (productData.rating.count < 0) {
+        throw new Error('Rating count cannot be negative');
+      }
+
+      console.log('Submitting product data:', productData);
+
+      let response;
+      if (currentProduct) {
+        if (!currentProduct.id) {
+          throw new Error('Product ID is missing');
+        }
+        console.log('Updating product with ID:', currentProduct.id);
+        response = await fetch(`${apiUrl}/products/${currentProduct.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
         });
-        setError(null);
+      } else {
+        console.log('Creating new product');
+        response = await fetch(`${apiUrl}/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
+        });
       }
-    } catch (error) {
-      console.error('Error updating product:', error.response?.data || error.message);
-      setError(error.response?.data?.message || 'Failed to update product');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API error:', errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const savedProduct = await response.json();
+      console.log('API response:', savedProduct);
+
+      dispatch(fetchProducts());
+      setFormData({
+        title: '',
+        description: '',
+        category: '',
+        price: '',
+        stock: '',
+        image: '',
+        rating: { rate: '', count: '' },
+      });
+      setCurrentProduct(null);
+      setIsFormOpen(false);
+    } catch (err) {
+      console.error('Error saving product:', err);
+      setFormError(err.message || 'Failed to save product. Please try again.');
     }
   };
 
+  // Handle edit button click
+  const handleEdit = (product) => {
+    console.log('Editing product:', product);
+    setCurrentProduct(product);
+    setFormData({
+      title: product.title || '',
+      description: product.description || '',
+      category: product.category || '',
+      price: product.price ? product.price.toString() : '',
+      stock: product.stock ? product.stock.toString() : '',
+      image: product.image || '',
+      rating: {
+        rate: product.rating?.rate ? product.rating.rate.toString() : '',
+        count: product.rating?.count ? product.rating.count.toString() : '',
+      },
+    });
+    setIsFormOpen(true);
+    setFormError(null);
+  };
+
+  // Handle delete button click
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        await api.delete(`/api/products/${id}`);
-        fetchProducts();
-      } catch (error) {
-        console.error('Error deleting product:', error);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      console.log('Deleting product with ID:', id);
+      const response = await fetch(`${apiUrl}/products/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
+      dispatch(fetchProducts());
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      setFormError(err.message || 'Failed to delete product. Please try again.');
     }
   };
 
-  const Pagination = () => {
-    const pageNumbers = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pageNumbers.push(i);
+  // Filter products based on filter state
+  const filteredProducts = Array.isArray(products) ? products.filter((product) => {
+    const titleMatch = filter.title
+      ? product.title.toLowerCase().includes(filter.title.toLowerCase())
+      : true;
+    const categoryMatch = filter.category
+      ? product.category.toLowerCase().includes(filter.category.toLowerCase())
+      : true;
+    const minPriceMatch = filter.minPrice
+      ? product.price >= parseFloat(filter.minPrice)
+      : true;
+    const maxPriceMatch = filter.maxPrice
+      ? product.price <= parseFloat(filter.maxPrice)
+      : true;
+    return titleMatch && categoryMatch && minPriceMatch && maxPriceMatch;
+  }) : [];
+
+  // Calculate pagination data
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.ceil(totalProducts / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
-  
-    return (
-      <div className="pagination-container">
-        <button 
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        
-        <div className="page-numbers">
-          {pageNumbers.map(number => (
-            <button
-              key={number}
-              onClick={() => setCurrentPage(number)}
-              className={currentPage === number ? 'active' : ''}
-            >
-              {number}
-            </button>
-          ))}
-        </div>
-  
-        <div className="page-info">
-          Page {currentPage} of {totalPages}
-        </div>
-        
-        <button 
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
-    );
   };
 
-  // Memoize the products table to prevent unnecessary re-renders
-  const ProductsTable = useMemo(() => (
-    <div className="admin-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>Title</th>
-            <th>Price</th>
-            <th>Category</th>
-            <th>Stock</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product._id || product.id}>
-              <td>
-                <img 
-                  src={product.image} 
-                  alt={product.title} 
-                  loading="lazy" // Add lazy loading for images
-                  style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = PLACEHOLDER_IMAGE;
-                  }}
-                />
-              </td>
-              <td>{product.title}</td>
-              <td>₹{product.price}</td>
-              <td>{product.category}</td>
-              <td>{product.stock}</td>
-              <td className="action-buttons">
-                <button 
-                  className="btn btn-primary"
-                  onClick={() => {
-                    setSelectedProduct(product);
-                    setFormData(product);
-                  }}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="btn btn-danger"
-                  onClick={() => handleDelete(product._id || product.id)}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ), [products]); // Only re-render when products change
+  // Create preview product for ProductCard
+  const previewProduct = {
+    id: currentProduct ? currentProduct.id : 0, // Temporary ID for preview
+    title: formData.title || 'Product Title',
+    price: parseFloat(formData.price) || 0,
+    stock: parseInt(formData.stock) || 0,
+    image: formData.image || 'https://placehold.co/280x250/png?text=Product+Image',
+    rating: {
+      rate: parseFloat(formData.rating.rate) || 0,
+      count: parseInt(formData.rating.count) || 0,
+    },
+    description: formData.description || 'Product description',
+    category: formData.category || 'Category',
+  };
 
-  // Update the return statement to include a grid layout
+  if (status === 'loading') return <div className="loading">Loading products...</div>;
+  if (error) return <div className="error">Error: {error}</div>;
+
   return (
-    <div className="admin-container">
+    <div className="product-management">
       <h2>Product Management</h2>
-      
-      <div className="admin-layout">
-        <form className="admin-form" onSubmit={selectedProduct ? handleUpdate : handleCreate}>
-          <div className="form-group">
-            <label>Product Title</label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Price</label>
-            <input
-              type="number"
-              value={formData.price}
-              onChange={(e) => setFormData({...formData, price: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Category</label>
-            <input
-              type="text"
-              value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Stock</label>
-            <input
-              type="number"
-              value={formData.stock}
-              onChange={(e) => setFormData({...formData, stock: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label>Description</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Image URL</label>
-            <input
-              type="text"
-              value={formData.image}
-              onChange={(e) => setFormData({...formData, image: e.target.value})}
-              required
-            />
-            <img 
-              src={formData.image || PLACEHOLDER_IMAGE}
-              alt="Preview"
-              style={{ 
-                width: '100px', 
-                height: '100px', 
-                objectFit: 'cover',
-                marginTop: '10px',
-                border: '1px solid #ddd'
-              }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = PLACEHOLDER_IMAGE;
-              }}
-            />
-          </div>
-          {/* Add image upload functionality to your form */}
-          <div className="form-group">
-            <label>Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const formData = new FormData();
-                  formData.append('image', file);
-                  try {
-                    const response = await api.post('/api/upload', formData);
-                    setFormData(prev => ({
-                      ...prev,
-                      image: response.data.imageUrl
-                    }));
-                  } catch (error) {
-                    console.error('Error uploading image:', error);
-                  }
-                }
-              }}
-            />
-          </div>
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <button type="submit" className="btn btn-primary">
-              {selectedProduct ? 'Update Product' : 'Create Product'}
-            </button>
-          </div>
-        </form>
 
-        <div className="preview-section">
-          <h3>Preview</h3>
-          <ProductPreviewCard data={formData} />
+      {/* Filter Bar */}
+      <div className="filter-bar">
+        <h3>Filter Products</h3>
+        <div className="filter-inputs">
+          <div>
+            <label>Title:</label>
+            <input
+              type="text"
+              name="title"
+              value={filter.title}
+              onChange={handleFilterChange}
+              placeholder="Search by title"
+            />
+          </div>
+          <div>
+            <label>Category:</label>
+            <input
+              type="text"
+              name="category"
+              value={filter.category}
+              onChange={handleFilterChange}
+              placeholder="Search by category"
+            />
+          </div>
+          <div>
+            <label>Min Price:</label>
+            <input
+              type="number"
+              name="minPrice"
+              value={filter.minPrice}
+              onChange={handleFilterChange}
+              placeholder="Min price"
+              step="0.01"
+              min="0"
+            />
+          </div>
+          <div>
+            <label>Max Price:</label>
+            <input
+              type="number"
+              name="maxPrice"
+              value={filter.maxPrice}
+              onChange={handleFilterChange}
+              placeholder="Max price"
+              step="0.01"
+              min="0"
+            />
+          </div>
+          <button onClick={clearFilters} className="clear-filter-btn">
+            Clear Filters
+          </button>
         </div>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
-      
-      {/* Show loading overlay instead of replacing content */}
-      {loading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner">Loading...</div>
+      <div className="product-actions">
+        <button
+          className="add-product-btn"
+          onClick={() => {
+            setCurrentProduct(null);
+            setFormData({
+              title: '',
+              description: '',
+              category: '',
+              price: '',
+              stock: '',
+              image: '',
+              rating: { rate: '', count: '' },
+            });
+            setIsFormOpen(true);
+            setFormError(null);
+          }}
+        >
+          Add New Product
+        </button>
+      </div>
+
+      {/* Product Form with Preview */}
+      {isFormOpen && (
+        <div className="product-form-container">
+          <div className="product-form">
+            <h3>{currentProduct ? 'Edit Product' : 'Add Product'}</h3>
+            {formError && <div className="error">{formError}</div>}
+            <form onSubmit={handleSubmit}>
+              <div>
+                <label>Title:</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label>Description:</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label>Category:</label>
+                <input
+                  type="text"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label>Price:</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0.01"
+                  required
+                />
+              </div>
+              <div>
+                <label>Stock:</label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleInputChange}
+                  min="0"
+                  required
+                />
+              </div>
+              <div>
+                <label>Image URL:</label>
+                <input
+                  type="text"
+                  name="image"
+                  value={formData.image}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <label>Rating (Rate):</label>
+                <input
+                  type="number"
+                  name="rating.rate"
+                  value={formData.rating.rate}
+                  onChange={handleInputChange}
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  required
+                />
+              </div>
+              <div>
+                <label>Rating (Count):</label>
+                <input
+                  type="number"
+                  name="rating.count"
+                  value={formData.rating.count}
+                  onChange={handleInputChange}
+                  min="0"
+                  required
+                />
+              </div>
+              <button type="submit">{currentProduct ? 'Update' : 'Add'} Product</button>
+              <button type="button" onClick={() => setIsFormOpen(false)}>
+                Cancel
+              </button>
+            </form>
+          </div>
+          <div className="product-preview">
+            <h3>Preview</h3>
+            <ProductCard product={previewProduct} />
+          </div>
         </div>
       )}
-      
-      {/* Always render the table, it will be covered by overlay when loading */}
-      {ProductsTable}
-      
-      <Pagination />
+
+      {/* Product Table */}
+      {currentProducts.length === 0 ? (
+        <p>No products found.</p>
+      ) : (
+        <>
+          <table className="products-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Rating</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentProducts.map((product) => (
+                <tr key={product._id || product.id}>
+                  <td>{product.id}</td>
+                  <td>
+                    {product.image && (
+                      <img
+                        src={product.image}
+                        alt={product.title}
+                        className="product-thumbnail"
+                      />
+                    )}
+                  </td>
+                  <td>{product.title}</td>
+                  <td>{product.description?.substring(0, 50)}...</td>
+                  <td>{product.category}</td>
+                  <td>₹{product.price?.toFixed(2)}</td>
+                  <td>{product.stock}</td>
+                  <td>
+                    {product.rating?.rate} ({product.rating?.count})
+                  </td>
+                  <td className="actions">
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(product)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDelete(product.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Pagination Controls */}
+          <div className="pagination">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="pagination-btn"
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+            >
+              Next
+            </button>
+            <span className="pagination-info">
+              Page {currentPage} of {totalPages} ({totalProducts} products)
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

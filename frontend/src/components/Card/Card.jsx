@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Card, CardMedia, CardContent, Typography, Box, IconButton, Badge, Chip } from '@mui/material';
 import { Favorite, FavoriteBorder, AddShoppingCart, ShoppingCart } from '@mui/icons-material';
+import { useDispatch, useSelector } from 'react-redux';
 import { toggleFavorite } from '../../store/slices/favoritesSlice';
 import { addToCart } from '../../store/slices/cartSlice';
 import { useNavigate } from 'react-router-dom';
 
-function ProductCard({ product }) {
+function ProductCard({ product, isPreview = false }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const favorites = useSelector(state => state.favorites.items);
@@ -16,11 +16,15 @@ function ProductCard({ product }) {
   const [imgSrc, setImgSrc] = useState(product.image);
 
   const handleToggleFavorite = () => {
-    dispatch(toggleFavorite(product));
+    if (!isPreview) {
+      dispatch(toggleFavorite(product));
+    }
   };
 
   const handleAddToCart = () => {
-    dispatch(addToCart(product));
+    if (!isPreview) {
+      dispatch(addToCart(product));
+    }
   };
 
   const handleImageError = () => {
@@ -28,8 +32,7 @@ function ProductCard({ product }) {
   };
 
   const handleCardClick = (e) => {
-    // Prevent navigation if clicking on action buttons
-    if (e.target.closest('button')) {
+    if (isPreview || e.target.closest('button')) {
       return;
     }
     navigate(`/product/${product.id}`);
@@ -38,40 +41,42 @@ function ProductCard({ product }) {
   return (
     <Card 
       sx={{ 
-        width: '300px',
-        height: '420px',
+        width: isPreview ? '250px' : '300px',
+        height: isPreview ? '350px' : '420px',
         display: 'flex',
         flexDirection: 'column',
         boxShadow: 3,
         m: 'auto',
-        cursor: 'pointer',
+        cursor: isPreview ? 'default' : 'pointer',
         '&:hover': {
-          boxShadow: 6
+          boxShadow: isPreview ? 3 : 6
         }
       }}
       onClick={handleCardClick}
     >
       <Box sx={{ 
-        height: '250px', // Increased image container height
+        height: isPreview ? '200px' : '250px',
         width: '100%',
         position: 'relative',
         overflow: 'hidden'
       }}>
-        <IconButton
-          onClick={handleToggleFavorite}
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            zIndex: 1,
-            color: isFavorite ? 'error.main' : 'pink',
-            '&:hover': {
-              backgroundColor: 'transparent',
-            }
-          }}
-        >
-          {isFavorite ? <Favorite /> : <FavoriteBorder />}
-        </IconButton>
+        {!isPreview && (
+          <IconButton
+            onClick={handleToggleFavorite}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 1,
+              color: isFavorite ? 'error.main' : 'grey',
+              '&:hover': {
+                backgroundColor: 'transparent',
+              }
+            }}
+          >
+            {isFavorite ? <Favorite /> : <FavoriteBorder />}
+          </IconButton>
+        )}
         <CardMedia
           component="img"
           sx={{
@@ -98,7 +103,7 @@ function ProductCard({ product }) {
             backgroundColor: theme => 
               `${product.stock > 0 
                 ? theme.palette.success.main 
-                : theme.palette.error.main}80`, // 80 is hex for 50% opacity
+                : theme.palette.error.main}80`,
             color: 'white',
             fontWeight: 'bold',
             backdropFilter: 'blur(4px)',
@@ -144,23 +149,25 @@ function ProductCard({ product }) {
             <Typography variant="body2" color="text.secondary">
               ⭐ {product.rating.rate} ({product.rating.count})
             </Typography>
-            <Badge 
-              badgeContent={cartItem?.quantity || 0} 
-              color="primary"
-              sx={{ 
-                '& .MuiBadge-badge': {
-                  display: cartItem ? 'block' : 'none'
-                }
-              }}
-            >
-              <IconButton 
-                color={cartItem ? "primary" : "default"}
-                size="small"
-                onClick={handleAddToCart}
+            {!isPreview && (
+              <Badge 
+                badgeContent={cartItem?.quantity || 0} 
+                color="primary"
+                sx={{ 
+                  '& .MuiBadge-badge': {
+                    display: cartItem ? 'block' : 'none'
+                  }
+                }}
               >
-                {cartItem ? <ShoppingCart /> : <AddShoppingCart />}
-              </IconButton>
-            </Badge>
+                <IconButton 
+                  color={cartItem ? "primary" : "default"}
+                  size="small"
+                  onClick={handleAddToCart}
+                >
+                  {cartItem ? <ShoppingCart /> : <AddShoppingCart />}
+                </IconButton>
+              </Badge>
+            )}
           </Box>
         </Box>
       </CardContent>

@@ -31,6 +31,7 @@ const getProductById = async (req, res) => {
 };
 
 // @desc    Create new product
+// @desc    Create new product
 const createProduct = async (req, res) => {
   console.log("POST /api/products - Creating product with data:", req.body);
   try {
@@ -39,7 +40,13 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: "Stock cannot be negative" });
     }
 
-    const newProduct = new Product(req.body);
+    // Generate numeric id
+    const id = (await Product.countDocuments()) + 1;
+
+    const newProduct = new Product({
+      ...req.body,
+      id, // Set the id field
+    });
 
     // Validate product before saving
     const validationError = newProduct.validateSync();
@@ -63,28 +70,41 @@ const createProduct = async (req, res) => {
 
 // @desc    Update existing product
 const updateProduct = async (req, res) => {
+  console.log('PUT /api/products/:id - Request params:', req.params);
+  console.log('PUT /api/products/:id - Request body:', req.body);
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
+    const updatedProduct = await Product.findOneAndUpdate(
+      { id: parseInt(req.params.id) }, // Query by numeric id
       req.body,
       { new: true }
     );
-    if (!updatedProduct)
+    if (!updatedProduct) {
+      console.log('Product not found for id:', req.params.id);
       return res.status(404).json({ message: "Product not found" });
+    }
+    console.log('Updated product:', updatedProduct);
     res.json(updatedProduct);
   } catch (error) {
+    console.error('Error updating product:', error);
     res.status(400).json({ message: error.message });
   }
 };
 
 // @desc    Delete product
 const deleteProduct = async (req, res) => {
+  console.log('DELETE /api/products/:id - Deleting product with id:', req.params.id);
   try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-    if (!deletedProduct)
+    const deletedProduct = await Product.findOneAndDelete({
+      id: parseInt(req.params.id),
+    });
+    if (!deletedProduct) {
+      console.log('Product not found for id:', req.params.id);
       return res.status(404).json({ message: "Product not found" });
+    }
+    console.log('Product deleted successfully:', deletedProduct);
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
+    console.error('Error deleting product:', error);
     res.status(500).json({ message: error.message });
   }
 };
