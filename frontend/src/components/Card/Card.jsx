@@ -118,7 +118,7 @@ function ProductCard({ product, isPreview = false }) {
         flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         padding: 2,
         '&:last-child': { paddingBottom: 2 }
       }}>
@@ -130,7 +130,7 @@ function ProductCard({ product, isPreview = false }) {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            mb: 1
+            mb: 0
           }}
           title={product.title}
         >
@@ -140,7 +140,7 @@ function ProductCard({ product, isPreview = false }) {
           <Typography 
             variant="body1" 
             color="success.main" 
-            sx={{ mb: 1 }}
+            sx={{ mb: 1, textAlign: 'left' }}
           >
             Price: ₹{product.price.toLocaleString('en-IN')}
           </Typography>

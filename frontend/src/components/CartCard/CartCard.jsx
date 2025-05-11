@@ -108,7 +108,7 @@ function CartCard({ item, onQuantityChange, onRemove }) {
         flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         padding: 2,
         '&:last-child': { paddingBottom: 2 }
       }}>
@@ -120,7 +120,7 @@ function CartCard({ item, onQuantityChange, onRemove }) {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            mb: 1
+            mb: 0
           }}
           title={item.title}
         >
@@ -130,7 +130,7 @@ function CartCard({ item, onQuantityChange, onRemove }) {
           <Typography 
             variant="body1" 
             color="success.main" 
-            sx={{ mb: 1 }}
+            sx={{ mb: 1, textAlign: 'left' }}
           >
             Price: ₹{(item.price * item.quantity).toLocaleString('en-IN')}
           </Typography>
