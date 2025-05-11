@@ -16,8 +16,7 @@ function App() {
         <Route
           path="/*"
           element={
-            <>
-              <Navbar isLoggedIn={isLoggedIn} />
+            <Navbar isLoggedIn={isLoggedIn}>
               <main className="main-content">
                 <Routes>
                   <Route path="/" element={<Navigate to="/shop" replace />} />
@@ -27,7 +26,7 @@ function App() {
                   <Route path="/product/:id" element={<ProductDetails />} />
                 </Routes>
               </main>
-            </>
+            </Navbar>
           }
         />
         <Route path="/admin/*" element={<Admin />} />

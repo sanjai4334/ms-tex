@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AdminNavbar from '../../components/AdminNavbar/AdminNavbar';
 import ProductManagement from './ProductManagement';
-import './Admin.css';
+import './admin.css';
 
 function Admin() {
   return (
