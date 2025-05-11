@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from '../../store/slices/productSlice';
-import ProductCard from '../../components/Card/Card'; // Adjust path to your ProductCard component
-import './ProductManagement.css';
+import ProductCard from '../../components/Card/Card';
+import './ProductManagement.scss'; // Compiled from SCSS
+import { gsap } from 'gsap';
 
 function ProductManagement() {
   const dispatch = useDispatch();
   const { items: products, status, error } = useSelector((state) => state.products);
-
-  // State for form, pagination, and filtering
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [formData, setFormData] = useState({
@@ -30,14 +29,161 @@ function ProductManagement() {
   });
   const productsPerPage = 10;
 
+  // Refs for GSAP animations
+  const formRef = useRef(null);
+  const tableRef = useRef(null);
+  const spinnerRef = useRef(null);
+  const loadingRef = useRef(null);
+
+  // Debounce filter state
+  const [debouncedFilter, setDebouncedFilter] = useState(filter);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedFilter(filter);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [filter]);
+
+  // Memoized filtered products
+  const filteredProducts = useMemo(() => {
+    return Array.isArray(products)
+      ? products.filter((product) => {
+          const titleMatch = debouncedFilter.title
+            ? product.title.toLowerCase().includes(debouncedFilter.title.toLowerCase())
+            : true;
+          const categoryMatch = debouncedFilter.category
+            ? product.category.toLowerCase().includes(debouncedFilter.category.toLowerCase())
+            : true;
+          const minPriceMatch = debouncedFilter.minPrice
+            ? product.price >= parseFloat(debouncedFilter.minPrice)
+            : true;
+          const maxPriceMatch = debouncedFilter.maxPrice
+            ? product.price <= parseFloat(debouncedFilter.maxPrice)
+            : true;
+          return titleMatch && categoryMatch && minPriceMatch && maxPriceMatch;
+        })
+      : [];
+  }, [products, debouncedFilter]);
+
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.ceil(totalProducts / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Fetch products and reset page
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchProducts());
     }
     setCurrentPage(1);
-  }, [status, dispatch, filter]);
+  }, [status, dispatch]);
 
-  // Handle form input changes
+  // GSAP Animations for Loading
+  useEffect(() => {
+    if (status === 'loading' && spinnerRef.current && loadingRef.current) {
+      gsap.to(spinnerRef.current.querySelectorAll('.ring'), {
+        rotation: 360,
+        repeat: -1,
+        duration: 1.2,
+        ease: 'linear',
+      });
+      gsap.fromTo(
+        loadingRef.current,
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }
+      );
+    } else if (loadingRef.current) {
+      gsap.to(loadingRef.current, {
+        opacity: 0,
+        scale: 0.8,
+        duration: 0.5,
+        ease: 'power3.in',
+        onComplete: () => {
+          loadingRef.current.style.display = 'none';
+        },
+      });
+    }
+  }, [status]);
+
+  // GSAP Animations for Form
+  useEffect(() => {
+    if (isFormOpen && formRef.current) {
+      gsap.fromTo(
+        formRef.current,
+        { y: 80, opacity: 0, scale: 0.9 },
+        { y: 0, opacity: 1, scale: 1, duration: 1, ease: 'bounce.out' }
+      );
+      gsap.from(formRef.current.querySelectorAll('div'), {
+        opacity: 0,
+        y: 20,
+        stagger: 0.1,
+        duration: 0.6,
+        ease: 'power3.out',
+        delay: 0.2,
+      });
+    }
+  }, [isFormOpen]);
+
+  // GSAP Animations for Table
+  useEffect(() => {
+    if (tableRef.current && status === 'succeeded' && currentProducts.length > 0) {
+      const rows = tableRef.current.querySelectorAll('tbody tr:not(.skeleton-row)');
+      gsap.fromTo(
+        rows,
+        { opacity: 0, y: 20, scale: 0.98 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          stagger: 0.1,
+          duration: 0.6,
+          ease: 'power4.out',
+          onStart: () => {
+            // Hide skeleton rows during animation
+            gsap.to(tableRef.current.querySelectorAll('.skeleton-row'), {
+              opacity: 0,
+              duration: 0.3,
+              ease: 'power2.in',
+            });
+          },
+        }
+      );
+    }
+  }, [currentProducts, status]);
+
+  // Button hover animations
+  useEffect(() => {
+    const buttons = document.querySelectorAll('.add-product-btn, .clear-filter-btn, .edit-btn, .delete-btn, .pagination-btn, .form-buttons button');
+    buttons.forEach((button) => {
+      button.addEventListener('mouseenter', () => {
+        gsap.to(button, {
+          scale: 1.1,
+          rotation: 2,
+          boxShadow: '0 12px 24px rgba(0, 123, 255, 0.4)',
+          duration: 0.4,
+          ease: 'power3.out',
+        });
+      });
+      button.addEventListener('mouseleave', () => {
+        gsap.to(button, {
+          scale: 1,
+          rotation: 0,
+          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
+          duration: 0.4,
+          ease: 'power3.out',
+        });
+      });
+    });
+
+    return () => {
+      buttons.forEach((button) => {
+        button.removeEventListener('mouseenter', () => {});
+        button.removeEventListener('mouseleave', () => {});
+      });
+    };
+  }, [isFormOpen, currentProducts]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name.startsWith('rating.')) {
@@ -52,13 +198,11 @@ function ProductManagement() {
     setFormError(null);
   };
 
-  // Handle filter input changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Clear filter inputs
   const clearFilters = () => {
     setFilter({
       title: '',
@@ -68,7 +212,6 @@ function ProductManagement() {
     });
   };
 
-  // Handle form submission for adding or updating a product
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
@@ -87,44 +230,24 @@ function ProductManagement() {
         },
       };
 
-      // Client-side validation
-      if (!productData.title) {
-        throw new Error('Title is required');
-      }
-      if (!productData.description) {
-        throw new Error('Description is required');
-      }
-      if (!productData.category) {
-        throw new Error('Category is required');
-      }
-      if (productData.price <= 0) {
-        throw new Error('Price must be greater than 0');
-      }
-      if (productData.stock < 0) {
-        throw new Error('Stock cannot be negative');
-      }
-      if (productData.rating.rate < 0 || productData.rating.rate > 5) {
+      if (!productData.title) throw new Error('Title is required');
+      if (!productData.description) throw new Error('Description is required');
+      if (!productData.category) throw new Error('Category is required');
+      if (productData.price <= 0) throw new Error('Price must be greater than 0');
+      if (productData.stock < 0) throw new Error('Stock cannot be negative');
+      if (productData.rating.rate < 0 || productData.rating.rate > 5)
         throw new Error('Rating must be between 0 and 5');
-      }
-      if (productData.rating.count < 0) {
-        throw new Error('Rating count cannot be negative');
-      }
-
-      console.log('Submitting product data:', productData);
+      if (productData.rating.count < 0) throw new Error('Rating count cannot be negative');
 
       let response;
       if (currentProduct) {
-        if (!currentProduct.id) {
-          throw new Error('Product ID is missing');
-        }
-        console.log('Updating product with ID:', currentProduct.id);
+        if (!currentProduct.id) throw new Error('Product ID is missing');
         response = await fetch(`${apiUrl}/products/${currentProduct.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productData),
         });
       } else {
-        console.log('Creating new product');
         response = await fetch(`${apiUrl}/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -134,12 +257,8 @@ function ProductManagement() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('API error:', errorData);
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-
-      const savedProduct = await response.json();
-      console.log('API response:', savedProduct);
 
       dispatch(fetchProducts());
       setFormData({
@@ -154,14 +273,11 @@ function ProductManagement() {
       setCurrentProduct(null);
       setIsFormOpen(false);
     } catch (err) {
-      console.error('Error saving product:', err);
       setFormError(err.message || 'Failed to save product. Please try again.');
     }
   };
 
-  // Handle edit button click
   const handleEdit = (product) => {
-    console.log('Editing product:', product);
     setCurrentProduct(product);
     setFormData({
       title: product.title || '',
@@ -179,11 +295,9 @@ function ProductManagement() {
     setFormError(null);
   };
 
-  // Handle delete button click
   const handleDelete = async (id) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      console.log('Deleting product with ID:', id);
       const response = await fetch(`${apiUrl}/products/${id}`, {
         method: 'DELETE',
       });
@@ -193,45 +307,18 @@ function ProductManagement() {
       }
       dispatch(fetchProducts());
     } catch (err) {
-      console.error('Error deleting product:', err);
       setFormError(err.message || 'Failed to delete product. Please try again.');
     }
   };
 
-  // Filter products based on filter state
-  const filteredProducts = Array.isArray(products) ? products.filter((product) => {
-    const titleMatch = filter.title
-      ? product.title.toLowerCase().includes(filter.title.toLowerCase())
-      : true;
-    const categoryMatch = filter.category
-      ? product.category.toLowerCase().includes(filter.category.toLowerCase())
-      : true;
-    const minPriceMatch = filter.minPrice
-      ? product.price >= parseFloat(filter.minPrice)
-      : true;
-    const maxPriceMatch = filter.maxPrice
-      ? product.price <= parseFloat(filter.maxPrice)
-      : true;
-    return titleMatch && categoryMatch && minPriceMatch && maxPriceMatch;
-  }) : [];
-
-  // Calculate pagination data
-  const totalProducts = filteredProducts.length;
-  const totalPages = Math.ceil(totalProducts / productsPerPage);
-  const startIndex = (currentPage - 1) * productsPerPage;
-  const endIndex = startIndex + productsPerPage;
-  const currentProducts = filteredProducts.slice(startIndex, endIndex);
-
-  // Handle page change
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
 
-  // Create preview product for ProductCard
   const previewProduct = {
-    id: currentProduct ? currentProduct.id : 0, // Temporary ID for preview
+    id: currentProduct ? currentProduct.id : 0,
     title: formData.title || 'Product Title',
     price: parseFloat(formData.price) || 0,
     stock: parseInt(formData.stock) || 0,
@@ -244,14 +331,44 @@ function ProductManagement() {
     category: formData.category || 'Category',
   };
 
-  if (status === 'loading') return <div className="loading">Loading products...</div>;
+  // Skeleton rows
+  const renderSkeletonRows = () => {
+    return Array(5).fill().map((_, index) => (
+      <tr key={`skeleton-${index}`} className="skeleton-row">
+        <td data-label="ID"></td>
+        <td data-label="Image"><div className="product-thumbnail"></div></td>
+        <td data-label="Title"></td>
+        <td data-label="Description"></td>
+        <td data-label="Category"></td>
+        <td data-label="Price"></td>
+        <td data-label="Stock"></td>
+        <td data-label="Rating"></td>
+        <td data-label="Actions" className="actions">
+          <button className="edit-btn"></button>
+          <button className="delete-btn"></button>
+        </td>
+      </tr>
+    ));
+  };
+
+  if (status === 'loading') {
+    return (
+      <div className="loading" ref={loadingRef}>
+        <div className="spinner" ref={spinnerRef}>
+          <div className="ring"></div>
+          <div className="ring"></div>
+        </div>
+        <span className="loading-text">Loading Products...</span>
+      </div>
+    );
+  }
+
   if (error) return <div className="error">Error: {error}</div>;
 
   return (
     <div className="product-management">
       <h2>Product Management</h2>
 
-      {/* Filter Bar */}
       <div className="filter-bar">
         <h3>Filter Products</h3>
         <div className="filter-inputs">
@@ -327,9 +444,8 @@ function ProductManagement() {
         </button>
       </div>
 
-      {/* Product Form with Preview */}
       {isFormOpen && (
-        <div className="product-form-container">
+        <div className="product-form-container" ref={formRef}>
           <div className="product-form">
             <h3>{currentProduct ? 'Edit Product' : 'Add Product'}</h3>
             {formError && <div className="error">{formError}</div>}
@@ -419,10 +535,12 @@ function ProductManagement() {
                   required
                 />
               </div>
-              <button type="submit">{currentProduct ? 'Update' : 'Add'} Product</button>
-              <button type="button" onClick={() => setIsFormOpen(false)}>
-                Cancel
-              </button>
+              <div className="form-buttons">
+                <button type="submit">{currentProduct ? 'Update' : 'Add'} Product</button>
+                <button type="button" onClick={() => setIsFormOpen(false)}>
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
           <div className="product-preview">
@@ -432,30 +550,29 @@ function ProductManagement() {
         </div>
       )}
 
-      {/* Product Table */}
-      {currentProducts.length === 0 ? (
+      {currentProducts.length === 0 && status !== 'loading' ? (
         <p>No products found.</p>
       ) : (
         <>
-          <table className="products-table">
+          <table className="products-table" ref={tableRef}>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Image</th>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Rating</th>
-                <th>Actions</th>
+                <th data-label="ID">ID</th>
+                <th data-label="Image">Image</th>
+                <th data-label="Title">Title</th>
+                <th data-label="Description">Description</th>
+                <th data-label="Category">Category</th>
+                <th data-label="Price">Price</th>
+                <th data-label="Stock">Stock</th>
+                <th data-label="Rating">Rating</th>
+                <th data-label="Actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {currentProducts.map((product) => (
+              {status === 'loading' ? renderSkeletonRows() : currentProducts.map((product) => (
                 <tr key={product._id || product.id}>
-                  <td>{product.id}</td>
-                  <td>
+                  <td data-label="ID">{product.id}</td>
+                  <td data-label="Image">
                     {product.image && (
                       <img
                         src={product.image}
@@ -464,15 +581,15 @@ function ProductManagement() {
                       />
                     )}
                   </td>
-                  <td>{product.title}</td>
-                  <td>{product.description?.substring(0, 50)}...</td>
-                  <td>{product.category}</td>
-                  <td>₹{product.price?.toFixed(2)}</td>
-                  <td>{product.stock}</td>
-                  <td>
+                  <td data-label="Title">{product.title}</td>
+                  <td data-label="Description">{product.description?.substring(0, 50)}...</td>
+                  <td data-label="Category">{product.category}</td>
+                  <td data-label="Price">₹{product.price?.toFixed(2)}</td>
+                  <td data-label="Stock">{product.stock}</td>
+                  <td data-label="Rating">
                     {product.rating?.rate} ({product.rating?.count})
                   </td>
-                  <td className="actions">
+                  <td data-label="Actions" className="actions">
                     <button
                       className="edit-btn"
                       onClick={() => handleEdit(product)}
@@ -491,7 +608,6 @@ function ProductManagement() {
             </tbody>
           </table>
 
-          {/* Pagination Controls */}
           <div className="pagination">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
