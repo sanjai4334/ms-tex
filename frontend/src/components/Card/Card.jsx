@@ -67,10 +67,14 @@ function ProductCard({ product, isPreview = false }) {
               position: 'absolute',
               top: 8,
               right: 8,
-              zIndex: 1,
-              color: isFavorite ? 'error.main' : 'grey',
-              '&:hover': {
-                backgroundColor: 'transparent',
+              zIndex: 2,
+              width: 'fit-content',
+              height: 'fit-content',
+              padding: '8px',
+              color: isFavorite ? 'red' : 'text.secondary', // Set red color for active state
+              '& .MuiSvgIcon-root': {
+                width: '24px',
+                height: '24px',
               }
             }}
           >

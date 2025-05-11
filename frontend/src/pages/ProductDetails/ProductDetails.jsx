@@ -100,8 +100,28 @@ const ProductDetails = () => {
       overflow: 'hidden',
       maxWidth: '100%' // Ensure no horizontal overflow
     }}>
-      <Box sx={{ p: 2 }}>
-        <IconButton onClick={() => navigate(-1)} aria-label="back">
+      <Box sx={{ 
+        p: 2, 
+        position: 'relative',
+        height: '48px',  // Fixed height instead of minHeight
+        display: 'flex',
+        alignItems: 'center',  // Center vertically
+      }}>
+        <IconButton 
+          onClick={() => navigate(-1)} 
+          aria-label="back"
+          sx={{
+            position: 'absolute',
+            right: 16,
+            width: 'fit-content',  // Ensure button takes only needed width
+            height: 'fit-content',  // Ensure button takes only needed height
+            padding: '8px',
+            '& .MuiSvgIcon-root': {  // Target the icon directly
+              width: '24px',
+              height: '24px',
+            }
+          }}
+        >
           <ArrowBack />
         </IconButton>
       </Box>
