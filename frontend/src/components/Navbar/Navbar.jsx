@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../../store/slices/authSlice';
 import {
   Drawer,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  IconButton,
   Box,
+  Avatar,
+  Typography
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -19,14 +22,37 @@ import {
   Login as LoginIcon,
 } from '@mui/icons-material';
 
-function Navbar({ isLoggedIn, children }) {
+function Navbar({ children }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isLoggedIn, user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
   };
 
   const drawerWidth = isCollapsed ? 80 : 240;
+
+  // Navigation items data
+  const navItems = [
+    { icon: <StoreIcon />, text: 'Shop', path: '/shop' },
+    { icon: <FavoriteIcon />, text: 'Favorites', path: '/favorites' },
+    { icon: <ShoppingCartIcon />, text: 'Cart', path: '/cart' },
+    { 
+      icon: isLoggedIn ? <Avatar sx={{ width: 24, height: 24 }} src="/default-avatar.jpg" /> : <AccountCircleIcon />,
+      text: isLoggedIn ? user?.firstName || 'Profile' : 'Profile',
+      onClick: () => isLoggedIn ? navigate('/') : navigate('/login')
+    },
+    { 
+      icon: isLoggedIn ? <LogoutIcon /> : <LoginIcon />, 
+      text: isLoggedIn ? 'Logout' : 'Login',
+      onClick: isLoggedIn ? handleLogout : () => navigate('/login')
+    }
+  ];
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -44,8 +70,9 @@ function Navbar({ isLoggedIn, children }) {
         }}
       >
         <List>
+          {/* Collapse Toggle */}
           <ListItem
-            component="div"
+            disablePadding
             onClick={toggleCollapse}
             sx={{
               padding: '0.8rem 1rem',
@@ -68,124 +95,56 @@ function Navbar({ isLoggedIn, children }) {
               }}
             />
           </ListItem>
-          <ListItem
-            button
-            component={Link}
-            to="/shop"
-            sx={{
-              padding: '0.8rem 1rem',
-              justifyContent: 'flex-start',
-              height: '56px',
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: '40px' }}>
-              <StoreIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Shop"
+
+          {/* User Profile Summary (Visible when expanded) */}
+          {isLoggedIn && !isCollapsed && (
+            <Box sx={{ px: 2, py: 1, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="subtitle2" noWrap>
+                {user?.firstName} {user?.lastName}
+              </Typography>
+              <Typography variant="caption" noWrap>
+                {user?.email}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Navigation Items */}
+          {navItems.map((item, index) => (
+            <ListItem
+              key={index}
+              disablePadding
+              onClick={item.onClick}
+              component={item.path ? Link : 'div'}
+              to={item.path}
               sx={{
-                opacity: isCollapsed ? 0 : 1,
-                transition: 'opacity 0.3s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
+                padding: '0.8rem 1rem',
+                justifyContent: 'flex-start',
+                height: '56px',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'action.hover'
+                }
               }}
-            />
-          </ListItem>
-          <ListItem
-            button
-            component={Link}
-            to="/favorites"
-            sx={{
-              padding: '0.8rem 1rem',
-              justifyContent: 'flex-start',
-              height: '56px',
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: '40px' }}>
-              <FavoriteIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Favorites"
-              sx={{
-                opacity: isCollapsed ? 0 : 1,
-                transition: 'opacity 0.3s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            />
-          </ListItem>
-          <ListItem
-            button
-            component={Link}
-            to="/cart"
-            sx={{
-              padding: '0.8rem 1rem',
-              justifyContent: 'flex-start',
-              height: '56px',
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: '40px' }}>
-              <ShoppingCartIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Cart"
-              sx={{
-                opacity: isCollapsed ? 0 : 1,
-                transition: 'opacity 0.3s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            />
-          </ListItem>
-          <ListItem
-            button
-            sx={{
-              padding: '0.8rem 1rem',
-              justifyContent: 'flex-start',
-              height: '56px',
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: '40px' }}>
-              <AccountCircleIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Profile"
-              sx={{
-                opacity: isCollapsed ? 0 : 1,
-                transition: 'opacity 0.3s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            />
-          </ListItem>
-          <ListItem
-            button
-            sx={{
-              padding: '0.8rem 1rem',
-              justifyContent: 'flex-start',
-              height: '56px',
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: '40px' }}>
-              {isLoggedIn ? <LogoutIcon /> : <LoginIcon />}
-            </ListItemIcon>
-            <ListItemText
-              primary={isLoggedIn ? 'Logout' : 'Login'}
-              sx={{
-                opacity: isCollapsed ? 0 : 1,
-                transition: 'opacity 0.3s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            />
-          </ListItem>
+            >
+              <ListItemIcon sx={{ minWidth: '40px' }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={item.text}
+                sx={{
+                  opacity: isCollapsed ? 0 : 1,
+                  transition: 'opacity 0.3s',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              />
+            </ListItem>
+          ))}
         </List>
       </Drawer>
+
+      {/* Main Content */}
       <Box
         component="main"
         sx={{
@@ -197,9 +156,7 @@ function Navbar({ isLoggedIn, children }) {
           transition: 'left 0.3s',
         }}
       >
-        {React.Children.map(children, child =>
-          React.cloneElement(child, { isNavExpanded: !isCollapsed })
-        )}
+        {children}
       </Box>
     </Box>
   );

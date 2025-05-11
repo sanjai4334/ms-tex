@@ -1,4 +1,5 @@
 // Import Poppins font
+@use "sass:color";
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
 // Variables
@@ -316,7 +317,7 @@ h2, h3 {
           &:last-child {
             background: $gray;
             &:hover {
-              background: darken($gray, 10%);
+              background: color.adjust($gray, $lightness: -10%);
             }
           }
         }
