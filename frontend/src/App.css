@@ -1,0 +1,16 @@
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #f9faff;
+}
+
+.main-content {
+  padding: 20px;
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 15px;
+  }
+}
