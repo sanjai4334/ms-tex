@@ -33,41 +33,33 @@ const getProductById = async (req, res) => {
 // @desc    Create new product
 // @desc    Create new product
 const createProduct = async (req, res) => {
-  console.log("POST /api/products - Creating product with data:", req.body);
   try {
-    // Ensure stock is a non-negative number
-    if (req.body.stock < 0) {
-      return res.status(400).json({ message: "Stock cannot be negative" });
+    // If an ID is provided in the request, check if it already exists
+    if (req.body.id) {
+      const existingProduct = await Product.findOne({ id: req.body.id });
+      if (existingProduct) {
+        return res.status(400).json({ 
+          message: `Product with ID ${req.body.id} already exists. Please use a different ID or let the system generate one automatically.` 
+        });
+      }
     }
-
-    // Generate numeric id
-    const id = (await Product.countDocuments()) + 1;
-
-    const newProduct = new Product({
-      ...req.body,
-      id, // Set the id field
-    });
-
-    // Validate product before saving
-    const validationError = newProduct.validateSync();
-    if (validationError) {
-      console.error("Validation error:", validationError);
-      return res.status(400).json({ message: validationError.message });
-    }
-
-    const savedProduct = await newProduct.save();
-    console.log("Product saved successfully:", savedProduct);
-    res.status(201).json(savedProduct);
+    
+    const product = new Product(req.body);
+    await product.save();
+    res.status(201).json(product);
   } catch (error) {
-    console.error("Error creating product:", {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    });
-    res.status(400).json({ message: error.message });
+    console.error('Error creating product:', error);
+    
+    // Handle duplicate key error specifically
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        message: 'Duplicate product ID. Please use a different ID or let the system generate one automatically.' 
+      });
+    }
+    
+    res.status(500).json({ message: error.message });
   }
 };
-
 // @desc    Update existing product
 const updateProduct = async (req, res) => {
   console.log('PUT /api/products/:id - Request params:', req.params);

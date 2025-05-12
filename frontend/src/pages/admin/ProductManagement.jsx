@@ -1,14 +1,16 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from '../../store/slices/productSlice';
 import ProductCard from '../../components/Card/Card';
-import './ProductManagement.scss'; // Compiled from SCSS
+import './ProductManagement.scss'; 
 import { gsap } from 'gsap';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function ProductManagement() {
   const dispatch = useDispatch();
   const { items: products, status, error } = useSelector((state) => state.products);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -27,13 +29,15 @@ function ProductManagement() {
     minPrice: '',
     maxPrice: '',
   });
+  const [dropdownStates, setDropdownStates] = useState({});
   const productsPerPage = 10;
 
   // Refs for GSAP animations
-  const formRef = useRef(null);
+  const modalRef = useRef(null);
   const tableRef = useRef(null);
   const spinnerRef = useRef(null);
   const loadingRef = useRef(null);
+  const dropdownRefs = useRef({});
 
   // Debounce filter state
   const [debouncedFilter, setDebouncedFilter] = useState(filter);
@@ -69,7 +73,10 @@ function ProductManagement() {
   const totalPages = Math.ceil(totalProducts / productsPerPage);
   const startIndex = (currentPage - 1) * productsPerPage;
   const endIndex = startIndex + productsPerPage;
-  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+  const currentProducts = useMemo(
+    () => filteredProducts.slice(startIndex, endIndex),
+    [filteredProducts, startIndex, endIndex]
+  );
 
   // Fetch products and reset page
   useEffect(() => {
@@ -106,15 +113,20 @@ function ProductManagement() {
     }
   }, [status]);
 
-  // GSAP Animations for Form
+  // GSAP Animations for Modal
   useEffect(() => {
-    if (isFormOpen && formRef.current) {
+    if (isModalOpen && modalRef.current) {
       gsap.fromTo(
-        formRef.current,
-        { y: 80, opacity: 0, scale: 0.9 },
-        { y: 0, opacity: 1, scale: 1, duration: 1, ease: 'bounce.out' }
+        modalRef.current,
+        { opacity: 0, scale: 0.9, y: 50 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'power3.out' }
       );
-      gsap.from(formRef.current.querySelectorAll('div'), {
+      gsap.fromTo(
+        modalRef.current.querySelector('.modal-backdrop'),
+        { opacity: 0 },
+        { opacity: 1, duration: 0.4, ease: 'power3.out' }
+      );
+      gsap.from(modalRef.current.querySelectorAll('.product-form div'), {
         opacity: 0,
         y: 20,
         stagger: 0.1,
@@ -123,7 +135,7 @@ function ProductManagement() {
         delay: 0.2,
       });
     }
-  }, [isFormOpen]);
+  }, [isModalOpen]);
 
   // GSAP Animations for Table
   useEffect(() => {
@@ -140,7 +152,6 @@ function ProductManagement() {
           duration: 0.6,
           ease: 'power4.out',
           onStart: () => {
-            // Hide skeleton rows during animation
             gsap.to(tableRef.current.querySelectorAll('.skeleton-row'), {
               opacity: 0,
               duration: 0.3,
@@ -152,39 +163,59 @@ function ProductManagement() {
     }
   }, [currentProducts, status]);
 
-  // Button hover animations
+  // GSAP Animations for Dropdown
   useEffect(() => {
-    const buttons = document.querySelectorAll('.add-product-btn, .clear-filter-btn, .edit-btn, .delete-btn, .pagination-btn, .form-buttons button');
+    Object.keys(dropdownStates).forEach((id) => {
+      if (dropdownStates[id] && dropdownRefs.current[id]) {
+        gsap.fromTo(
+          dropdownRefs.current[id],
+          { opacity: 0, scale: 0.95, y: -8 },
+          { opacity: 1, scale: 1, y: 0, duration: 0.25, ease: 'back.out(1.4)' }
+        );
+      }
+    });
+  }, [dropdownStates]);
+
+  // GSAP Animation for Menu Button Click
+  useEffect(() => {
+    const buttons = document.querySelectorAll('.menu-btn');
     buttons.forEach((button) => {
-      button.addEventListener('mouseenter', () => {
+      button.addEventListener('click', () => {
         gsap.to(button, {
-          scale: 1.1,
-          rotation: 2,
-          boxShadow: '0 12px 24px rgba(0, 123, 255, 0.4)',
-          duration: 0.4,
-          ease: 'power3.out',
-        });
-      });
-      button.addEventListener('mouseleave', () => {
-        gsap.to(button, {
-          scale: 1,
-          rotation: 0,
-          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
-          duration: 0.4,
-          ease: 'power3.out',
+          scale: 0.95,
+          duration: 0.1,
+          yoyo: true,
+          repeat: 1,
+          ease: 'power2.inOut',
         });
       });
     });
-
     return () => {
       buttons.forEach((button) => {
-        button.removeEventListener('mouseenter', () => {});
-        button.removeEventListener('mouseleave', () => {});
+        button.removeEventListener('click', () => {});
       });
     };
-  }, [isFormOpen, currentProducts]);
+  }, []);
 
-  const handleInputChange = (e) => {
+  // Handle clicks outside dropdown to close all
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.actions')) {
+        setDropdownStates({});
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const toggleDropdown = useCallback((productId) => {
+    setDropdownStates((prev) => ({
+      ...prev,
+      [productId]: !prev[productId],
+    }));
+  }, []);
+
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     if (name.startsWith('rating.')) {
       const ratingField = name.split('.')[1];
@@ -196,21 +227,21 @@ function ProductManagement() {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
     setFormError(null);
-  };
+  }, []);
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilter({
       title: '',
       category: '',
       minPrice: '',
       maxPrice: '',
     });
-  };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -271,65 +302,114 @@ function ProductManagement() {
         rating: { rate: '', count: '' },
       });
       setCurrentProduct(null);
-      setIsFormOpen(false);
+      setIsModalOpen(false);
+      toast.success(
+        currentProduct ? 'Product updated successfully!' : 'Product added successfully!',
+        {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
     } catch (err) {
-      setFormError(err.message || 'Failed to save product. Please try again.');
-    }
-  };
-
-  const handleEdit = (product) => {
-    setCurrentProduct(product);
-    setFormData({
-      title: product.title || '',
-      description: product.description || '',
-      category: product.category || '',
-      price: product.price ? product.price.toString() : '',
-      stock: product.stock ? product.stock.toString() : '',
-      image: product.image || '',
-      rating: {
-        rate: product.rating?.rate ? product.rating.rate.toString() : '',
-        count: product.rating?.count ? product.rating.count.toString() : '',
-      },
-    });
-    setIsFormOpen(true);
-    setFormError(null);
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/products/${id}`, {
-        method: 'DELETE',
+      const errorMessage = err.message.includes('Duplicate product ID')
+        ? 'A product with this ID already exists.'
+        : err.message || 'Failed to save product.';
+      setFormError(errorMessage);
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      dispatch(fetchProducts());
-    } catch (err) {
-      setFormError(err.message || 'Failed to delete product. Please try again.');
     }
   };
 
-  const handlePageChange = (page) => {
+  const handleEdit = useCallback(
+    (product) => {
+      setCurrentProduct(product);
+      setFormData({
+        title: product.title || '',
+        description: product.description || '',
+        category: product.category || '',
+        price: product.price ? product.price.toString() : '',
+        stock: product.stock ? product.stock.toString() : '',
+        image: product.image || '',
+        rating: {
+          rate: product.rating?.rate ? product.rating.rate.toString() : '',
+          count: product.rating?.count ? product.rating.count.toString() : '',
+        },
+      });
+      setIsModalOpen(true);
+      setFormError(null);
+      setDropdownStates({});
+    },
+    []
+  );
+
+  const handleDelete = useCallback(
+    async (id) => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const response = await fetch(`${apiUrl}/products/${id}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        dispatch(fetchProducts());
+        setDropdownStates({});
+        toast.success('Product deleted successfully!', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } catch (err) {
+        const errorMessage = err.message || 'Failed to delete product.';
+        setFormError(errorMessage);
+        toast.error(errorMessage, {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    },
+    [dispatch]
+  );
+
+  const handlePageChange = useCallback((page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
-  };
+  }, [totalPages]);
 
-  const previewProduct = {
-    id: currentProduct ? currentProduct.id : 0,
-    title: formData.title || 'Product Title',
-    price: parseFloat(formData.price) || 0,
-    stock: parseInt(formData.stock) || 0,
-    image: formData.image || 'https://placehold.co/280x250/png?text=Product+Image',
-    rating: {
-      rate: parseFloat(formData.rating.rate) || 0,
-      count: parseInt(formData.rating.count) || 0,
-    },
-    description: formData.description || 'Product description',
-    category: formData.category || 'Category',
-  };
+  const previewProduct = useMemo(
+    () => ({
+      title: formData.title || 'Product Title',
+      price: parseFloat(formData.price) || 0,
+      stock: parseInt(formData.stock) || 0,
+      image: formData.image || 'https://placehold.co/280x250/png?text=Product+Image',
+      rating: {
+        rate: parseFloat(formData.rating.rate) || 0,
+        count: parseInt(formData.rating.count) || 0,
+      },
+      description: formData.description || 'Product description',
+      category: formData.category || 'Category',
+    }),
+    [formData]
+  );
 
   // Skeleton rows
   const renderSkeletonRows = () => {
@@ -344,8 +424,9 @@ function ProductManagement() {
         <td data-label="Stock"></td>
         <td data-label="Rating"></td>
         <td data-label="Actions" className="actions">
-          <button className="edit-btn"></button>
-          <button className="delete-btn"></button>
+          <button className="menu-btn">
+            <i className="fas fa-ellipsis-vertical"></i>
+          </button>
         </td>
       </tr>
     ));
@@ -367,6 +448,18 @@ function ProductManagement() {
 
   return (
     <div className="product-management">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <h2>Product Management</h2>
 
       <div className="filter-bar">
@@ -436,7 +529,7 @@ function ProductManagement() {
               image: '',
               rating: { rate: '', count: '' },
             });
-            setIsFormOpen(true);
+            setIsModalOpen(true);
             setFormError(null);
           }}
         >
@@ -444,108 +537,113 @@ function ProductManagement() {
         </button>
       </div>
 
-      {isFormOpen && (
-        <div className="product-form-container" ref={formRef}>
-          <div className="product-form">
-            <h3>{currentProduct ? 'Edit Product' : 'Add Product'}</h3>
-            {formError && <div className="error">{formError}</div>}
-            <form onSubmit={handleSubmit}>
-              <div>
-                <label>Title:</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                />
+      {isModalOpen && (
+        <div className="modal" ref={modalRef}>
+          <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}></div>
+          <div className="modal-content">
+            <div className="product-form-container">
+              <div className="product-form">
+                <h3>{currentProduct ? 'Edit Product' : 'Add Product'}</h3>
+                {formError && <div className="error">{formError}</div>}
+                <form onSubmit={handleSubmit}>
+                  <div>
+                    <label>Title:</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Description:</label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Category:</label>
+                    <input
+                      type="text"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Price:</label>
+                    <input
+                      type="number"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      step="0.01"
+                      min="0.01"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Stock:</label>
+                    <input
+                      type="number"
+                      name="stock"
+                      value={formData.stock}
+                      onChange={handleInputChange}
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Image URL:</label>
+                    <input
+                      type="text"
+                      name="image"
+                      value={formData.image}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <label>Rating (Rate):</label>
+                    <input
+                      type="number"
+                      name="rating.rate"
+                      value={formData.rating.rate}
+                      onChange={handleInputChange}
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Rating (Count):</label>
+                    <input
+                      type="number"
+                      name="rating.count"
+                      value={formData.rating.count}
+                      onChange={handleInputChange}
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div className="form-buttons">
+                    <button type="submit">{currentProduct ? 'Update' : 'Add'} Product</button>
+                    <button type="button" onClick={() => setIsModalOpen(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div>
-                <label>Description:</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                />
+              <div className="product-preview">
+                <h3>Preview</h3>
+                <ProductCard product={previewProduct} />
               </div>
-              <div>
-                <label>Category:</label>
-                <input
-                  type="text"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <label>Price:</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  min="0.01"
-                  required
-                />
-              </div>
-              <div>
-                <label>Stock:</label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={formData.stock}
-                  onChange={handleInputChange}
-                  min="0"
-                  required
-                />
-              </div>
-              <div>
-                <label>Image URL:</label>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div>
-                <label>Rating (Rate):</label>
-                <input
-                  type="number"
-                  name="rating.rate"
-                  value={formData.rating.rate}
-                  onChange={handleInputChange}
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  required
-                />
-              </div>
-              <div>
-                <label>Rating (Count):</label>
-                <input
-                  type="number"
-                  name="rating.count"
-                  value={formData.rating.count}
-                  onChange={handleInputChange}
-                  min="0"
-                  required
-                />
-              </div>
-              <div className="form-buttons">
-                <button type="submit">{currentProduct ? 'Update' : 'Add'} Product</button>
-                <button type="button" onClick={() => setIsFormOpen(false)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-          <div className="product-preview">
-            <h3>Preview</h3>
-            <ProductCard product={previewProduct} />
+            </div>
           </div>
         </div>
       )}
@@ -591,17 +689,24 @@ function ProductManagement() {
                   </td>
                   <td data-label="Actions" className="actions">
                     <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(product)}
+                      className="menu-btn"
+                      onClick={() => toggleDropdown(product._id || product.id)}
                     >
-                      Edit
+                      <i className="fas fa-ellipsis-vertical"></i>
                     </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      Delete
-                    </button>
+                    {dropdownStates[product._id || product.id] && (
+                      <div
+                        className="dropdown-menu"
+                        ref={(el) => (dropdownRefs.current[product._id || product.id] = el)}
+                      >
+                        <button onClick={() => handleEdit(product)}>
+                          <i className="fas fa-edit"></i> Edit
+                        </button>
+                        <button className="delete" onClick={() => handleDelete(product.id)}>
+                          <i className="fas fa-trash"></i> Delete
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -639,7 +744,6 @@ function ProductManagement() {
         </>
       )}
     </div>
-  );
-}
+  );}
 
 export default ProductManagement;

@@ -1,136 +1,217 @@
-// Import Poppins font
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+  // Import Poppins font
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
-// Variables
-$primary: #007bff;
-$primary-gradient: linear-gradient(135deg, #007bff, #00d4ff);
-$secondary: #0a1a2f;
-$background: #f9faff;
-$error: #ff4b5e;
-$success: #28d98c;
-$white: #ffffff;
-$gray: #95a5a6;
-$border-radius: 10px;
-$shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-$glass-bg: rgba(255, 255, 255, 0.7);
-$glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-$transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  // Variables
+  $primary: #007bff;
+  $primary-gradient: linear-gradient(135deg, #007bff, #00d4ff);
+  $secondary: #0a1a2f;
+  $background: #f9faff;
+  $error: #ff4b5e;
+  $success: #28d98c;
+  $white: #ffffff;
+  $gray: #95a5a6;
+  $border-radius: 10px;
+  $shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  $glass-bg: rgba(255, 255, 255, 0.7);
+  $glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  $transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-// Animated background
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+  // Animated background
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 
-// Skeleton animation
-@keyframes skeletonPulse {
-  0% { background: rgba($gray, 0.1); }
-  50% { background: rgba($gray, 0.2); }
-  100% { background: rgba($gray, 0.1); }
-}
+  // Skeleton animation
+  @keyframes skeletonPulse {
+    0% { background: rgba($gray, 0.1); }
+    50% { background: rgba($gray, 0.2); }
+    100% { background: rgba($gray, 0.1); }
+  }
 
-// Global styles
-.product-management {
-  font-family: 'Poppins', sans-serif;
-  background: $background;
-  padding: 0 20px 20px;
-  // margin-left: 260px;
-  min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-  animation: fadeIn 0.8s ease-out;
+  // Global styles
+  .product-management {
+    font-family: 'Poppins', sans-serif;
+    background: $background;
+    padding: 0 20px 20px;
+    // margin-left: 260px;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.8s ease-out;
 
-  &:before {
-    content: '';
-    position: absolute;
+    &:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(#007bff, 0.05), rgba(#00d4ff, 0.05));
+      background-size: 200% 200%;
+      animation: gradientShift 15s ease infinite;
+      z-index: -1;
+    }
+
+    @media (max-width: 768px) {
+      margin-left: 0;
+      padding: 0 15px 15px;
+    }
+  }
+
+  // Fade-in animation
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  // Headings
+  h2, h3 {
+    color: $secondary;
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: 0.8px;
+  }
+
+  // Modal
+  .modal {
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, rgba(#007bff, 0.05), rgba(#00d4ff, 0.05));
-    background-size: 200% 200%;
-    animation: gradientShift 15s ease infinite;
-    z-index: -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba($secondary, 0.6);
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-content {
+      background: $glass-bg;
+      backdrop-filter: blur(12px);
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, rgba($primary, 0.3), rgba($white, 0.3)) 1;
+      border-radius: $border-radius;
+      box-shadow: $glass-shadow, inset 0 1px 2px rgba($white, 0.2);
+      max-width: 900px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      padding: 20px;
+    }
   }
 
-  @media (max-width: 768px) {
-    margin-left: 0;
-    padding: 0 15px 15px;
-  }
-}
+  // Filter Bar
+  .filter-bar {
+    background: $glass-bg;
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: $border-radius;
+    box-shadow: $glass-shadow;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 
-// Fade-in animation
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    h3 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+    }
 
-// Headings
-h2, h3 {
-  color: $secondary;
-  font-weight: 700;
-  margin-bottom: 20px;
-  letter-spacing: 0.8px;
-}
+    .filter-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
 
-// Filter Bar
-.filter-bar {
-  background: $glass-bg;
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: $border-radius;
-  box-shadow: $glass-shadow;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+      div {
+        display: flex;
+        flex-direction: column;
 
-  h3 {
-    font-size: 1.3rem;
-    margin-bottom: 15px;
-  }
+        label {
+          font-size: 0.9rem;
+          color: $secondary;
+          margin-bottom: 6px;
+          font-weight: 600;
+        }
 
-  .filter-inputs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+        input {
+          padding: 10px;
+          border: none;
+          border-radius: $border-radius;
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
+          font-size: 0.9rem;
+          transition: $transition;
 
-    div {
-      display: flex;
-      flex-direction: column;
-
-      label {
-        font-size: 0.9rem;
-        color: $secondary;
-        margin-bottom: 6px;
-        font-weight: 600;
+          &:focus {
+            outline: none;
+            box-shadow: 0 0 8px rgba($primary, 0.4);
+            background: $white;
+            transform: scale(1.02);
+          }
+        }
       }
 
-      input {
-        padding: 10px;
+      .clear-filter-btn {
+        background: $primary-gradient;
+        color: $white;
+        padding: 10px 20px;
         border: none;
         border-radius: $border-radius;
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
         font-size: 0.9rem;
-        transition: $transition;
+        font-weight: 600;
+        box-shadow: $shadow;
+        position: relative;
+        overflow: hidden;
 
-        &:focus {
-          outline: none;
-          box-shadow: 0 0 8px rgba($primary, 0.4);
-          background: $white;
-          transform: scale(1.02);
+        &:before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba($primary, 0.3);
+
+          &:before {
+            width: 300px;
+            height: 300px;
+          }
         }
       }
     }
+  }
 
-    .clear-filter-btn {
+  // Product Actions
+  .product-actions {
+    margin-bottom: 20px;
+
+    .add-product-btn {
       background: $primary-gradient;
       color: $white;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border: none;
       border-radius: $border-radius;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 600;
       box-shadow: $shadow;
       position: relative;
@@ -160,535 +241,598 @@ h2, h3 {
       }
     }
   }
-}
 
-// Product Actions
-.product-actions {
-  margin-bottom: 20px;
-
-  .add-product-btn {
-    background: $primary-gradient;
-    color: $white;
-    padding: 12px 24px;
-    border: none;
+  // Product Form Container
+  .product-form-container {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 15px;
+    padding: 15px;
     border-radius: $border-radius;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    box-shadow: $shadow;
-    position: relative;
-    overflow: hidden;
 
-    &:before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      transition: width 0.6s ease, height 0.6s ease;
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      padding: 10px;
     }
 
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba($primary, 0.3);
-
-      &:before {
-        width: 300px;
-        height: 300px;
-      }
-    }
-  }
-}
-
-// Product Form Container
-.product-form-container {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 20px;
-  background: $glass-bg;
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: $border-radius;
-  box-shadow: $glass-shadow;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-
-  .product-form {
-    h3 {
-      font-size: 1.3rem;
-    }
-
-    .error {
-      color: $error;
-      font-size: 0.9rem;
-      margin-bottom: 10px;
-      background: rgba($error, 0.1);
-      padding: 8px;
-      border-radius: 6px;
-    }
-
-    form {
-      display: grid;
-      gap: 15px;
-
-      div {
-        display: flex;
-        flex-direction: column;
-
-        label {
-          font-size: 0.9rem;
-          color: $secondary;
-          margin-bottom: 6px;
-          font-weight: 600;
-        }
-
-        input, textarea {
-          padding: 10px;
-          border: none;
-          border-radius: $border-radius;
-          background: rgba(255, 255, 255, 0.9);
-          box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
-          font-size: 0.9rem;
-          transition: $transition;
-
-          &:focus {
-            outline: none;
-            box-shadow: 0 0 8px rgba($primary, 0.4);
-            background: $white;
-            transform: scale(1.02);
-          }
-        }
-
-        textarea {
-          resize: vertical;
-          min-height: 90px;
-        }
+    .product-form {
+      h3 {
+        font-size: 1.3rem;
       }
 
-      .form-buttons {
-        display: flex;
-        gap: 10px;
-
-        button {
-          background: $primary-gradient;
-          color: $white;
-          padding: 10px 20px;
-          border: none;
-          border-radius: $border-radius;
-          cursor: pointer;
-          font-size: 0.9rem;
-          font-weight: 600;
-          box-shadow: $shadow;
-          position: relative;
-          overflow: hidden;
-
-          &:before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-          }
-
-          &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba($primary, 0.3);
-
-            &:before {
-              width: 300px;
-              height: 300px;
-            }
-          }
-
-          &:last-child {
-            background: $gray;
-            &:hover {
-              background: darken($gray, 10%);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .product-preview {
-    h3 {
-      font-size: 1.2rem;
-    }
-
-    .product-card {
-      width: 100%;
-      max-width: 280px;
-      margin: 0 auto;
-      border-radius: $border-radius;
-      box-shadow: $shadow;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-
-      &:hover {
-        transform: translateY(-5px) rotate(2deg);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-      }
-    }
-  }
-}
-
-// Products Table
-.products-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: $glass-bg;
-  backdrop-filter: blur(10px);
-  border-radius: $border-radius;
-  box-shadow: $glass-shadow;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  position: relative;
-
-  thead {
-    background: $secondary;
-    color: $white;
-
-    th {
-      padding: 15px;
-      font-weight: 600;
-      text-align: left;
-      font-size: 0.9rem;
-    }
-  }
-
-  tbody {
-    tr {
-      border-bottom: 1px solid rgba($gray, 0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-        background: rgba($primary, 0.05);
-      }
-
-      td {
-        padding: 15px;
+      .error {
+        color: $error;
         font-size: 0.9rem;
-        color: $secondary;
+        margin-bottom: 10px;
+        background: rgba($error, 0.1);
+        padding: 8px;
+        border-radius: 6px;
+      }
 
-        .product-thumbnail {
-          width: 50px;
-          height: 50px;
-          object-fit: cover;
-          border-radius: 6px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      form {
+        display: grid;
+        gap: 12px;
+
+        div {
+          display: flex;
+          flex-direction: column;
+
+          label {
+            font-size: 0.9rem;
+            color: $secondary;
+            margin-bottom: 6px;
+            font-weight: 600;
+          }
+
+          input, textarea {
+            padding: 10px;
+            border: none;
+            border-radius: $border-radius;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
+            font-size: 0.9rem;
+            transition: $transition;
+
+            &:focus {
+              outline: none;
+              box-shadow: 0 0 8px rgba($primary, 0.4);
+              background: $white;
+              transform: scale(1.02);
+            }
+          }
+
+          textarea {
+            resize: vertical;
+            min-height: 80px;
+          }
         }
 
-        .actions {
+        .form-buttons {
           display: flex;
           gap: 10px;
 
-          .edit-btn, .delete-btn {
-            padding: 8px 16px;
+          button {
+            background: $primary-gradient;
+            color: $white;
+            padding: 10px 20px;
             border: none;
             border-radius: $border-radius;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
             box-shadow: $shadow;
             position: relative;
             overflow: hidden;
 
-            &.edit-btn {
-              background: $primary-gradient;
-              color: $white;
-
-              &:before {
-                content: '';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 0;
-                height: 0;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                transform: translate(-50%, -50%);
-                transition: width 0.6s ease, height 0.6s ease;
-              }
-
-              &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 20px rgba($primary, 0.3);
-
-                &:before {
-                  width: 200px;
-                  height: 200px;
-                }
-              }
+            &:before {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 0;
+              height: 0;
+              background: rgba(255, 255, 255, 0.3);
+              border-radius: 50%;
+              transform: translate(-50%, -50%);
+              transition: width 0.6s ease, height 0.6s ease;
             }
-
-            &.delete-btn {
-              background: $error;
-              color: $white;
-
-              &:before {
-                content: '';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 0;
-                height: 0;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                transform: translate(-50%, -50%);
-                transition: width 0.6s ease, height 0.6s ease;
-              }
-
-              &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 20px rgba($error, 0.3);
-
-                &:before {
-                  width: 200px;
-                  height: 200px;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Skeleton rows
-    .skeleton-row {
-      td {
-        padding: 15px;
-        background: rgba($gray, 0.1);
-        animation: skeletonPulse 1.5s infinite ease-in-out;
-
-        .product-thumbnail {
-          background: rgba($gray, 0.2);
-          width: 50px;
-          height: 50px;
-          border-radius: 6px;
-        }
-
-        .actions {
-          .edit-btn, .delete-btn {
-            background: rgba($gray, 0.2);
-            box-shadow: none;
-            cursor: default;
 
             &:hover {
-              transform: none;
-              box-shadow: none;
+              transform: translateY(-2px);
+              box-shadow: 0 10px 20px rgba($primary, 0.3);
+
+              &:before {
+                width: 300px;
+                height: 300px;
+              }
+            }
+
+            &:last-child {
+              background: $gray;
+              &:hover {
+                background: darken($gray, 10%);
+              }
             }
           }
         }
       }
     }
+
+    .product-preview {
+      h3 {
+        font-size: 1.2rem;
+      }
+
+      .product-card {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+        border-radius: $border-radius;
+        box-shadow: $shadow;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+        &:hover {
+          transform: translateY(-5px) rotate(2deg);
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+      }
+    }
   }
 
-  @media (max-width: 768px) {
-    display: block;
-    overflow-x: auto;
-
-    thead, tbody, tr, th, td {
-      display: block;
-    }
+  // Products Table
+  .products-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: $glass-bg;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius;
+    box-shadow: $glass-shadow;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
 
     thead {
-      display: none;
-    }
+      background: $secondary;
+      color: $white;
 
-    tbody tr, tbody .skeleton-row {
-      margin-bottom: 10px;
-      padding: 10px;
-      border: 1px solid rgba($gray, 0.1);
-      border-radius: $border-radius;
-      box-shadow: $shadow;
-    }
-
-    td {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-
-      &:before {
-        content: attr(data-label);
+      th {
+        padding: 15px;
         font-weight: 600;
-        color: $secondary;
-        width: 40%;
+        text-align: left;
+        font-size: 0.9rem;
       }
     }
 
-    .actions {
-      justify-content: flex-end;
+    tbody {
+      tr {
+        border-bottom: 1px solid rgba($gray, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+          background: rgba($primary, 0.05);
+        }
+
+        td {
+          padding: 15px;
+          font-size: 0.9rem;
+          color: $secondary;
+
+          .product-thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+
+          .actions {
+            position: relative;
+            display: flex;
+            justify-content: flex-end;
+
+            .menu-btn {
+              background: rgba($white, 0.15);
+              border: none;
+              color: $secondary;
+              cursor: pointer;
+              padding: 0;
+              width: 30px;
+              height: 30px;
+              border-radius: 10px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              transition: $transition;
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), inset 0 1px 2px rgba($white, 0.2);
+              backdrop-filter: blur(8px);
+
+              i {
+                font-size: 1.1rem;
+              }
+
+              &:hover {
+                background: rgba($primary, 0.1);
+                color: $primary;
+                transform: scale(1.05);
+                box-shadow: 0 6px 16px rgba($primary, 0.3), inset 0 1px 3px rgba($white, 0.3);
+              }
+
+              &:focus {
+                outline: none;
+                box-shadow: 0 0 10px rgba($primary, 0.5);
+              }
+            }
+
+            .dropdown-menu {
+              position: absolute;
+              top: calc(100% + 4px);
+              right: 0;
+              background: $glass-bg;
+              backdrop-filter: blur(15px);
+              border: 1px solid transparent;
+              border-image: linear-gradient(135deg, rgba($primary, 0.3), rgba($white, 0.3)) 1;
+              border-radius: 8px;
+              box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba($white, 0.2);
+              width: 120px;
+              z-index: 1000;
+              overflow: hidden;
+              padding: 6px 0;
+
+              button {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+                padding: 8px 14px;
+                background: none;
+                border: none;
+                color: $secondary;
+                font-size: 0.9rem;
+                font-weight: 500;
+                text-align: left;
+                cursor: pointer;
+                transition: $transition;
+
+                i {
+                  font-size: 0.9rem;
+                  color: inherit;
+                }
+
+                &:hover {
+                  background: rgba($primary, 0.1);
+                  color: $primary;
+                  transform: translateX(2px);
+                  box-shadow: inset 0 0 6px rgba($primary, 0.2);
+                }
+
+                &.delete {
+                  color: $error;
+
+                  &:hover {
+                    background: rgba($error, 0.1);
+                    color: $error;
+                    box-shadow: inset 0 0 6px rgba($error, 0.2);
+                  }
+                }
+
+                &:not(:last-child) {
+                  border-bottom: 1px solid rgba($gray, 0.2);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Skeleton rows
+      .skeleton-row {
+        td {
+          padding: 15px;
+          background: rgba($gray, 0.1);
+          animation: skeletonPulse 1.5s infinite ease-in-out;
+
+          .product-thumbnail {
+            background: rgba($gray, 0.2);
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+          }
+
+          .actions {
+            .menu-btn {
+              background: rgba($gray, 0.2);
+              box-shadow: none;
+              backdrop-filter: none;
+              cursor: default;
+
+              &:hover {
+                transform: none;
+                box-shadow: none;
+              }
+            }
+          }
+        }
+      }
     }
 
-  }}
+    @media (max-width: 768px) {
+      display: block;
+      overflow-x: auto;
 
-// Pagination
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-  justify-content: center;
-  flex-wrap: wrap;
+      thead, tbody, tr, th, td {
+        display: block;
+      }
 
-  .pagination-btn {
-    background: $glass-bg;
-    color: $secondary;
-    padding: 8px 14px;
-    border: none;
-    border-radius: $border-radius;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 600;
-    box-shadow: $shadow;
-    transition: $transition;
+      thead {
+        display: none;
+      }
 
-    &:hover:not(:disabled) {
-      background: $primary-gradient;
-      color: $white;
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba($primary, 0.3);
-    }
+      tbody tr, tbody .skeleton-row {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid rgba($gray, 0.1);
+        border-radius: $border-radius;
+        box-shadow: $shadow;
+      }
 
-    &.active {
-      background: $primary-gradient;
-      color: $white;
-      font-weight: 700;
-      box-shadow: 0 6px 12px rgba($primary, 0.3);
-    }
+      td {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
 
-    &:disabled {
-      background: rgba($gray, 0.2);
-      cursor: not-allowed;
-      box-shadow: none;
+        &:before {
+          content: attr(data-label);
+          font-weight: 600;
+          color: $secondary;
+          width: 40%;
+        }
+      }
+
+      .actions {
+        justify-content: flex-end;
+
+        .dropdown-menu {
+          right: 10px;
+        }
+      }
     }
   }
 
-  .pagination-info {
+  // Pagination
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .pagination-btn {
+      background: $glass-bg;
+      color: $secondary;
+      padding: 8px 14px;
+      border: none;
+      border-radius: $border-radius;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: $shadow;
+      transition: $transition;
+
+      &:hover:not(:disabled) {
+        background: $primary-gradient;
+        color: $white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba($primary, 0.3);
+      }
+
+      &.active {
+        background: $primary-gradient;
+        color: $white;
+        font-weight: 700;
+        box-shadow: 0 6px 12px rgba($primary, 0.3);
+      }
+
+      &:disabled {
+        background: rgba($gray, 0.2);
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+
+    .pagination-info {
+      font-size: 0.9rem;
+      color: $gray;
+      font-weight: 500;
+    }
+  }
+
+  // Loading Animation
+  .loading {
+    position: fixed;
+    top: 0;
+    left: 260px;
+    right: 0;
+    bottom: 0;
+    background: $glass-bg;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.5s ease-out;
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      position: relative;
+      margin-bottom: 15px;
+
+      .ring {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 5px solid rgba($primary, 0.2);
+        border-top: 5px solid $primary;
+        border-radius: 50%;
+        animation: spin 1.2s linear infinite;
+      }
+
+      .ring:nth-child(2) {
+        width: 80%;
+        height: 80%;
+        top: 10%;
+        left: 10%;
+        border: 4px solid rgba($primary, 0.3);
+        border-top: 4px solid $primary-gradient;
+        animation: spin 1.5s linear infinite reverse;
+      }
+
+      &:before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        border-radius: 50%;
+        box-shadow: 0 0 20px rgba($primary, 0.7);
+        opacity: 0;
+        animation: glowPulse 1.5s infinite ease-in-out;
+      }
+    }
+
+    .loading-text {
+      color: $secondary;
+      font-size: 1.2rem;
+      font-weight: 600;
+      animation: textPulse 1.5s infinite ease-in-out;
+    }
+
+    @media (max-width: 768px) {
+      left: 0;
+    }
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes glowPulse {
+    0% { opacity: 0; transform: scale(0.9); }
+    50% { opacity: 0.7; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1.4); }
+  }
+
+  @keyframes textPulse {
+    0% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 0.7; transform: scale(1); }
+  }
+
+  // Error Message
+  .error {
+    color: $error;
     font-size: 0.9rem;
+    margin-bottom: 10px;
+    background: rgba($error, 0.1);
+    padding: 8px;
+    border-radius: 6px;
+  }
+
+  // No Products Message
+  p {
+    text-align: center;
     color: $gray;
+    font-size: 1rem;
+    margin: 20px 0;
     font-weight: 500;
   }
-}
 
-// Loading Animation
-.loading {
-  position: fixed;
-  top: 0;
-  left: 260px;
-  right: 0;
-  bottom: 0;
-  background: $glass-bg;
-  backdrop-filter: blur(10px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.5s ease-out;
-
-  .spinner {
-    width: 60px;
-    height: 60px;
-    position: relative;
-    margin-bottom: 15px;
-
-    .ring {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: 5px solid rgba($primary, 0.2);
-      border-top: 5px solid $primary;
-      border-radius: 50%;
-      animation: spin 1.2s linear infinite;
-    }
-
-    .ring:nth-child(2) {
-      width: 80%;
-      height: 80%;
-      top: 10%;
-      left: 10%;
-      border: 4px solid rgba($primary, 0.3);
-      border-top: 4px solid $primary-gradient;
-      animation: spin 1.5s linear infinite reverse;
-    }
-
-    &:before {
-      content: '';
-      position: absolute;
-      top: -10px;
-      left: -10px;
-      right: -10px;
-      bottom: -10px;
-      border-radius: 50%;
-      box-shadow: 0 0 20px rgba($primary, 0.7);
-      opacity: 0;
-      animation: glowPulse 1.5s infinite ease-in-out;
-    }
+  // Toast Styles
+  .Toastify__toast-container {
+    z-index: 9999;
+    position: fixed;
+    padding: 4px;
+    width: 320px;
+    box-sizing: border-box;
+    color: #fff;
   }
 
-  .loading-text {
+  .Toastify__toast {
+    font-family: 'Poppins', sans-serif;
+    background: $glass-bg;
+    backdrop-filter: blur(12px);
+    border: 1px solid transparent;
+    border-image: linear-gradient(135deg, rgba($primary, 0.3), rgba($white, 0.3)) 1;
+    border-radius: $border-radius;
+    box-shadow: $glass-shadow, inset 0 1px 2px rgba($white, 0.2);
     color: $secondary;
-    font-size: 1.2rem;
-    font-weight: 600;
-    animation: textPulse 1.5s infinite ease-in-out;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 12px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+
+    &.Toastify__toast--success {
+      background: rgba($success, 0.1);
+      color: $success;
+      border-image: linear-gradient(135deg, rgba($success, 0.3), rgba($white, 0.3)) 1;
+    }
+
+    &.Toastify__toast--error {
+      background: rgba($error, 0.1);
+      color: $error;
+      border-image: linear-gradient(135deg, rgba($error, 0.3), rgba($white, 0.3)) 1;
+    }
+
+    .Toastify__toast-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .Toastify__close-button {
+      color: $secondary;
+      opacity: 0.7;
+      transition: $transition;
+
+      &:hover {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+    }
+
+    .Toastify__progress-bar {
+      background: $primary-gradient;
+      &.Toastify__progress-bar--success {
+        background: $success;
+      }
+      &.Toastify__progress-bar--error {
+        background: $error;
+      }
+    }
   }
 
   @media (max-width: 768px) {
-    left: 0;
+    .Toastify__toast-container {
+      width: 100%;
+      padding: 0;
+      left: 0;
+      margin: 0;
+    }
+    
+    .Toastify__toast {
+      margin: 10px;
+      font-size: 0.85rem;
+      padding: 10px;
+    }
   }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes glowPulse {
-  0% { opacity: 0; transform: scale(0.9); }
-  50% { opacity: 0.7; transform: scale(1.2); }
-  100% { opacity: 0; transform: scale(1.4); }
-}
-
-@keyframes textPulse {
-  0% { opacity: 0.7; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-  100% { opacity: 0.7; transform: scale(1); }
-}
-
-// Error Message
-.error {
-  color: $error;
-  font-size: 1rem;
-  text-align: center;
-  margin: 20px 0;
-  background: rgba($error, 0.1);
-  padding: 10px;
-  border-radius: 6px;
-}
-
-// No Products Message
-p {
-  text-align: center;
-  color: $gray;
-  font-size: 1rem;
-  margin: 20px 0;
-  font-weight: 500;
-}
