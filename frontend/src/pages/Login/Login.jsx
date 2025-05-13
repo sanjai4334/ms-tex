@@ -27,7 +27,7 @@ export default function Login() {
     e.preventDefault();
     const result = await dispatch(loginUser({ email, password }));
     if (result.payload) {
-      navigate('/dashboard');
+      navigate('/shop'); // Redirect to shop page
     }
   };
 

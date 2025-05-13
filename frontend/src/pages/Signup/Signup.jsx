@@ -37,7 +37,7 @@ export default function Signup() {
     }
     const result = await dispatch(registerUser(formData));
     if (result.payload) {
-      navigate('/dashboard');
+      navigate('/shop');
     }
   };
 
