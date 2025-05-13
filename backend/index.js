@@ -1,67 +1,74 @@
-require('dotenv').config();
+// Load environment variables
+require('dotenv').config({ path: '../.env' }); // Adjust path if needed
+
 const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config({ path: '../.env' }); // Load env vars
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enhanced CORS configuration
+// Connect to MongoDB
+connectDB();
+
+// CORS setup (frontend URL from .env)
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: process.env.FRONTEND_URL || 'http://localhost:9999',
+  credentials: true,
 }));
 
-// Request logging middleware (enhanced)
+// Body parser with limit
+app.use(express.json({ limit: '10kb' }));
+
+// Request logger (dev-friendly)
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`, 
-    req.body && Object.keys(req.body).length > 0 ? `| Body: ${JSON.stringify(req.body)}` : ''
+  console.log(
+    `${new Date().toISOString()} - ${req.method} ${req.originalUrl}`,
+    req.body && Object.keys(req.body).length ? `| Body: ${JSON.stringify(req.body)}` : ''
   );
   next();
 });
 
-// Connect to MongoDB (unchanged)
-connectDB();
-
-// Enhanced JSON parser with size limit
-app.use(express.json({ limit: '10kb' }));
-
-// Rate limiting middleware for auth routes
+// Rate limiter for auth endpoints
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 100, // max 100 requests
+  message: 'Too many requests from this IP, please try again later.',
 });
 
-// Test route (unchanged)
+// Routes
 app.get('/', (req, res) => {
   res.send('Backend is running! 🚀');
 });
 
-// Product routes (unchanged)
+// Product routes
 const productRoutes = require('./routes/productRoutes');
 app.use('/api/products', productRoutes);
 
-// NEW: Auth routes with rate limiting
+// Auth routes (with rate limiter)
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authLimiter, authRoutes);
 
-// NEW: Error handling middleware (should be last)
+// Worker routes (add this for your WorkersManagement frontend)
+const workerRoutes = require('./routes/workerRoutes');
+app.use('/api/workers', workerRoutes);
+
+// Error handler (should be last)
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] Error: ${err.message}`);
   console.error(err.stack);
-  
+
   res.status(err.statusCode || 500).json({
     success: false,
     error: process.env.NODE_ENV === 'development' ? err.message : 'Server error',
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   });
 });
 
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'Not configured'}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'Not configured'}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

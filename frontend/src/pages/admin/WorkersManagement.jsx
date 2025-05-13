@@ -19,46 +19,28 @@ function WorkersManagement() {
   });
 
   useEffect(() => {
-    // For demo purposes, let's create some mock data
-    const mockWorkers = [
-      {
-        _id: '1',
-        name: 'John Doe',
-        position: 'Tailor',
-        contactNumber: '9876543210',
-        email: 'john@example.com',
-        joiningDate: '2023-01-15T00:00:00.000Z',
-        salary: '25000',
-        status: 'active'
-      },
-      {
-        _id: '2',
-        name: 'Jane Smith',
-        position: 'Designer',
-        contactNumber: '8765432109',
-        email: 'jane@example.com',
-        joiningDate: '2023-02-20T00:00:00.000Z',
-        salary: '30000',
-        status: 'active'
-      },
-      {
-        _id: '3',
-        name: 'Mike Johnson',
-        position: 'Cutter',
-        contactNumber: '7654321098',
-        email: 'mike@example.com',
-        joiningDate: '2023-03-10T00:00:00.000Z',
-        salary: '22000',
-        status: 'on-leave'
-      }
-    ];
-    
-    // Simulate API call
-    setTimeout(() => {
-      setWorkers(mockWorkers);
-      setLoading(false);
-    }, 1000);
+    fetchWorkers();
   }, []);
+
+  const fetchWorkers = async () => {
+    setLoading(true);
+    try {
+      const adminToken = localStorage.getItem('adminToken');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${adminToken}`
+        }
+      };
+      const { data } = await axios.get('/api/workers', config);
+      setWorkers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching workers:', error);
+      toast.error(error.response?.data?.message || 'Failed to load workers data');
+      setWorkers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,39 +53,39 @@ function WorkersManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const adminToken = localStorage.getItem('adminToken');
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        }
+      };
+
       if (currentWorker) {
-        // Update existing worker (mock implementation)
-        const updatedWorkers = workers.map(worker => 
-          worker._id === currentWorker._id ? { ...formData, _id: currentWorker._id } : worker
-        );
-        setWorkers(updatedWorkers);
+        await axios.put(`/api/workers/${currentWorker._id}`, formData, config);
         toast.success('Worker updated successfully');
       } else {
-        // Add new worker (mock implementation)
-        const newWorker = {
-          ...formData,
-          _id: Date.now().toString() // Generate a mock ID
-        };
-        setWorkers([...workers, newWorker]);
+        await axios.post('/api/workers', formData, config);
         toast.success('Worker added successfully');
       }
+      fetchWorkers();
       closeModal();
     } catch (error) {
       console.error('Error saving worker:', error);
-      toast.error('Failed to save worker data');
+      toast.error(error.response?.data?.message || 'Failed to save worker data');
     }
   };
 
   const handleEdit = (worker) => {
     setCurrentWorker(worker);
     setFormData({
-      name: worker.name,
-      position: worker.position,
-      contactNumber: worker.contactNumber,
-      email: worker.email,
-      joiningDate: worker.joiningDate?.split('T')[0] || '',
-      salary: worker.salary,
-      status: worker.status
+      name: worker.name || '',
+      position: worker.position || '',
+      contactNumber: worker.contactNumber || '',
+      email: worker.email || '',
+      joiningDate: worker.joiningDate ? worker.joiningDate.split('T')[0] : '',
+      salary: worker.salary || '',
+      status: worker.status || 'active'
     });
     setIsModalOpen(true);
   };
@@ -111,13 +93,18 @@ function WorkersManagement() {
   const handleDelete = async (workerId) => {
     if (window.confirm('Are you sure you want to delete this worker?')) {
       try {
-        // Mock delete implementation
-        const filteredWorkers = workers.filter(worker => worker._id !== workerId);
-        setWorkers(filteredWorkers);
+        const adminToken = localStorage.getItem('adminToken');
+        const config = {
+          headers: {
+            Authorization: `Bearer ${adminToken}`
+          }
+        };
+        await axios.delete(`/api/workers/${workerId}`, config);
         toast.success('Worker deleted successfully');
+        fetchWorkers();
       } catch (error) {
         console.error('Error deleting worker:', error);
-        toast.error('Failed to delete worker');
+        toast.error(error.response?.data?.message || 'Failed to delete worker');
       }
     }
   };
@@ -151,16 +138,10 @@ function WorkersManagement() {
       </div>
 
       {loading ? (
-        <div className="loading">
-          <div className="spinner">
-            <div className="ring"></div>
-            <div className="ring"></div>
-          </div>
-          <p className="loading-text">Loading workers data...</p>
-        </div>
+        <div className="loading">Loading workers data...</div>
       ) : (
         <>
-          {workers.length === 0 ? (
+          {!Array.isArray(workers) || workers.length === 0 ? (
             <p>No workers found. Add your first worker!</p>
           ) : (
             <table className="workers-table">
@@ -192,12 +173,8 @@ function WorkersManagement() {
                     </td>
                     <td>
                       <div className="actions">
-                        <button className="menu-btn" onClick={() => handleEdit(worker)}>
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button className="menu-btn delete" onClick={() => handleDelete(worker._id)}>
-                          <i className="fas fa-trash"></i>
-                        </button>
+                        <button onClick={() => handleEdit(worker)}>Edit</button>
+                        <button onClick={() => handleDelete(worker._id)}>Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -210,15 +187,13 @@ function WorkersManagement() {
 
       {isModalOpen && (
         <div className="modal">
-          <div className="modal-backdrop" onClick={closeModal}></div>
           <div className="modal-content">
             <h3>{currentWorker ? 'Edit Worker' : 'Add New Worker'}</h3>
             <form onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="name">Name</label>
+                <label>Name</label>
                 <input
                   type="text"
-                  id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
@@ -226,10 +201,9 @@ function WorkersManagement() {
                 />
               </div>
               <div>
-                <label htmlFor="position">Position</label>
+                <label>Position</label>
                 <input
                   type="text"
-                  id="position"
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
@@ -237,10 +211,9 @@ function WorkersManagement() {
                 />
               </div>
               <div>
-                <label htmlFor="contactNumber">Contact Number</label>
+                <label>Contact Number</label>
                 <input
                   type="text"
-                  id="contactNumber"
                   name="contactNumber"
                   value={formData.contactNumber}
                   onChange={handleInputChange}
@@ -248,20 +221,18 @@ function WorkersManagement() {
                 />
               </div>
               <div>
-                <label htmlFor="email">Email</label>
+                <label>Email</label>
                 <input
                   type="email"
-                  id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                 />
               </div>
               <div>
-                <label htmlFor="joiningDate">Joining Date</label>
+                <label>Joining Date</label>
                 <input
                   type="date"
-                  id="joiningDate"
                   name="joiningDate"
                   value={formData.joiningDate}
                   onChange={handleInputChange}
@@ -269,10 +240,9 @@ function WorkersManagement() {
                 />
               </div>
               <div>
-                <label htmlFor="salary">Salary</label>
+                <label>Salary</label>
                 <input
                   type="number"
-                  id="salary"
                   name="salary"
                   value={formData.salary}
                   onChange={handleInputChange}
@@ -280,9 +250,8 @@ function WorkersManagement() {
                 />
               </div>
               <div>
-                <label htmlFor="status">Status</label>
+                <label>Status</label>
                 <select
-                  id="status"
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
