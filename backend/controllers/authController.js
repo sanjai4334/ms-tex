@@ -10,33 +10,41 @@ const generateRefreshToken = (id) => {
 };
 
 exports.registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  try {
+    const { firstName, lastName, email, password } = req.body;
 
-  const userExists = await User.findOne({ email });
-  if (userExists) {
-    res.status(400);
-    throw new Error('User already exists');
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(409).json({ 
+        message: 'User already exists with this email address'
+      });
+    }
+
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      password
+    });
+
+    const refreshToken = generateRefreshToken(user._id);
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    res.status(201).json({
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      token: generateToken(user._id),
+      refreshToken
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ 
+      message: error.message || 'Error during registration'
+    });
   }
-
-  const user = await User.create({
-    firstName,
-    lastName,
-    email,
-    password
-  });
-
-  const refreshToken = generateRefreshToken(user._id);
-  user.refreshToken = refreshToken;
-  await user.save();
-
-  res.status(201).json({
-    _id: user._id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    token: generateToken(user._id),
-    refreshToken
-  });
 });
 
 exports.loginUser = asyncHandler(async (req, res) => {

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../store/slices/authSlice';
+import { logout, selectAuth } from '../../features/auth/authSlice';
+import { toast } from 'react-toastify';
 import {
   Drawer,
   List,
@@ -24,7 +25,7 @@ import {
 
 function Navbar({ children }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { isLoggedIn, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector(selectAuth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -32,6 +33,7 @@ function Navbar({ children }) {
 
   const handleLogout = () => {
     dispatch(logout());
+    toast.success('Logged out successfully');
     navigate('/login');
   };
 
@@ -39,18 +41,24 @@ function Navbar({ children }) {
 
   // Navigation items data
   const navItems = [
-    { icon: <StoreIcon />, text: 'Shop', path: '/shop' },
-    { icon: <FavoriteIcon />, text: 'Favorites', path: '/favorites' },
-    { icon: <ShoppingCartIcon />, text: 'Cart', path: '/cart' },
-    { 
-      icon: isLoggedIn ? <Avatar sx={{ width: 24, height: 24 }} src="/default-avatar.jpg" /> : <AccountCircleIcon />,
-      text: isLoggedIn ? user?.firstName || 'Profile' : 'Profile',
-      onClick: () => isLoggedIn ? navigate('/') : navigate('/login')
+    { icon: <StoreIcon />, text: 'Shop', path: '/shop' }, // No auth check for Shop
+    { icon: <FavoriteIcon />, 
+      text: 'Favorites',
+      onClick: () => isAuthenticated ? navigate('/favorites') : navigate('/login')
+    },
+    { icon: <ShoppingCartIcon />, 
+      text: 'Cart',
+      onClick: () => isAuthenticated ? navigate('/cart') : navigate('/login')
     },
     { 
-      icon: isLoggedIn ? <LogoutIcon /> : <LoginIcon />, 
-      text: isLoggedIn ? 'Logout' : 'Login',
-      onClick: isLoggedIn ? handleLogout : () => navigate('/login')
+      icon: <AccountCircleIcon />,
+      text: 'Profile',
+      onClick: () => isAuthenticated ? navigate('/profile') : navigate('/login')
+    },
+    { 
+      icon: isAuthenticated ? <LogoutIcon /> : <LoginIcon />, 
+      text: isAuthenticated ? 'Logout' : 'Login',
+      onClick: isAuthenticated ? handleLogout : () => navigate('/login')
     }
   ];
 
@@ -95,18 +103,6 @@ function Navbar({ children }) {
               }}
             />
           </ListItem>
-
-          {/* User Profile Summary (Visible when expanded) */}
-          {isLoggedIn && !isCollapsed && (
-            <Box sx={{ px: 2, py: 1, borderBottom: 1, borderColor: 'divider' }}>
-              <Typography variant="subtitle2" noWrap>
-                {user?.firstName} {user?.lastName}
-              </Typography>
-              <Typography variant="caption" noWrap>
-                {user?.email}
-              </Typography>
-            </Box>
-          )}
 
           {/* Navigation Items */}
           {navItems.map((item, index) => (
