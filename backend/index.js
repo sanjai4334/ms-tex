@@ -54,6 +54,9 @@ app.use('/api/auth', authLimiter, authRoutes);
 const workerRoutes = require('./routes/workerRoutes');
 app.use('/api/workers', workerRoutes);
 
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/user', userRoutes);
+
 // Error handler (should be last)
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] Error: ${err.message}`);
