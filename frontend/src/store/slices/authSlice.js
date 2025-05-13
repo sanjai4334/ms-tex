@@ -1,6 +1,20 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from '../../api/axios';
 
+// Helper functions to get and set user info in localStorage
+const getUserFromLocalStorage = () => {
+  const user = localStorage.getItem('user');
+  return user ? JSON.parse(user) : null;
+};
+
+const setUserToLocalStorage = (user) => {
+  localStorage.setItem('user', JSON.stringify(user));
+};
+
+const removeUserFromLocalStorage = () => {
+  localStorage.removeItem('user');
+};
+
 // Async actions
 export const loginUser = createAsyncThunk(
   'auth/login',
@@ -31,7 +45,7 @@ export const registerUser = createAsyncThunk(
 );
 
 const initialState = {
-  user: null,
+  user: getUserFromLocalStorage(),
   token: localStorage.getItem('token') || null,
   refreshToken: localStorage.getItem('refreshToken') || null,
   status: 'idle',
@@ -48,6 +62,7 @@ const authSlice = createSlice({
       state.refreshToken = null;
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
+      removeUserFromLocalStorage();
     },
     setToken(state, action) {
       state.token = action.payload;
@@ -62,13 +77,15 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = {
-            firstName: action.payload.firstName,
-            lastName: action.payload.lastName,
-            email: action.payload.email
-          };
+        const user = {
+          firstName: action.payload.firstName,
+          lastName: action.payload.lastName,
+          email: action.payload.email
+        };
+        state.user = user;
         state.token = action.payload.token;
         state.refreshToken = action.payload.refreshToken;
+        setUserToLocalStorage(user);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = 'failed';
@@ -80,13 +97,15 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        const user = {
+          firstName: action.payload.firstName,
+          lastName: action.payload.lastName,
+          email: action.payload.email
+        };
+        state.user = user;
         state.token = action.payload.token;
         state.refreshToken = action.payload.refreshToken;
-        state.user = {
-            firstName: action.payload.firstName,
-            lastName: action.payload.lastName,
-            email: action.payload.email
-          };
+        setUserToLocalStorage(user);
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = 'failed';
