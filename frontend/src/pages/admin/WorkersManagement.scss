@@ -1,0 +1,185 @@
+@use "sass:color";
+
+// Variables
+$primary: #007bff;
+$primary-gradient: linear-gradient(135deg, #007bff, #00d4ff);
+$secondary: #0a1a2f;
+$background: #f9faff;
+$error: #ff4b5e;
+$success: #28d98c;
+$white: #ffffff;
+$gray: #95a5a6;
+$border-radius: 10px;
+$shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+$glass-bg: rgba(255, 255, 255, 0.7);
+$glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+$transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+.workers-management {
+  font-family: 'Poppins', sans-serif;
+  background: $background;
+  padding: 0 20px 20px;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.8s ease-out;
+
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(#007bff, 0.05), rgba(#00d4ff, 0.05));
+    background-size: 200% 200%;
+    animation: gradientShift 15s ease infinite;
+    z-index: -1;
+  }
+}
+
+.worker-actions {
+  margin-bottom: 20px;
+
+  .add-worker-btn {
+    background: $primary-gradient;
+    color: $white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: $border-radius;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: $shadow;
+    position: relative;
+    overflow: hidden;
+
+    &:before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba($primary, 0.3);
+
+      &:before {
+        width: 300px;
+        height: 300px;
+      }
+    }
+  }
+}
+
+.workers-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: $glass-bg;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: $border-radius;
+  box-shadow: $glass-shadow;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+
+  thead {
+    background: $secondary;
+    color: $white;
+
+    th {
+      padding: 15px;
+      font-weight: 600;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid rgba($gray, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        background: rgba($primary, 0.05);
+      }
+
+      td {
+        padding: 15px;
+        font-size: 0.9rem;
+        color: $secondary;
+
+        .status-badge {
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          text-transform: capitalize;
+          
+          &.active {
+            background: rgba(#28d98c, 0.2);
+            color: #28d98c;
+          }
+          
+          &.on-leave {
+            background: rgba(#ffc107, 0.2);
+            color: #ffc107;
+          }
+          
+          &.terminated {
+            background: rgba($error, 0.2);
+            color: $error;
+          }
+        }
+
+        .actions {
+          display: flex;
+          gap: 8px;
+          justify-content: flex-end;
+
+          .menu-btn {
+            background: rgba($white, 0.15);
+            border: none;
+            color: $secondary;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: $transition;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), inset 0 1px 2px rgba($white, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+
+            &:hover {
+              background: rgba($primary, 0.1);
+              color: $primary;
+              transform: scale(1.05);
+              box-shadow: 0 6px 16px rgba($primary, 0.3), inset 0 1px 3px rgba($white, 0.3);
+            }
+            
+            &.delete:hover {
+              background: rgba($error, 0.1);
+              color: $error;
+              box-shadow: 0 6px 16px rgba($error, 0.3), inset 0 1px 3px rgba($white, 0.3);
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AdminLogin.css';
 
-function AdminLogin() {
+function AdminLogin({ onLoginSuccess }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -14,6 +14,12 @@ function AdminLogin() {
     if (credentials.username === 'admin' && credentials.password === 'admin') {
       // Store a simple token in localStorage
       localStorage.setItem('adminToken', 'admin-token');
+      
+      // Call the success callback if provided
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
+      
       navigate('/admin/products');
     } else {
       setError('Invalid credentials. Use admin/admin');
@@ -30,7 +36,7 @@ function AdminLogin() {
             type="text"
             placeholder="Username"
             value={credentials.username}
-            onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+            onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
             required
           />
         </div>
@@ -39,7 +45,7 @@ function AdminLogin() {
             type="password"
             placeholder="Password"
             value={credentials.password}
-            onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+            onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
             required
           />
         </div>

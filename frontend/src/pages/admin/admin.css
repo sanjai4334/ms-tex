@@ -1,18 +1,39 @@
 .admin-container {
   display: flex;
-  flex-direction: column;
-  background: #f9faff;
+  min-height: 100vh;
 }
 
 .admin-main-content {
-  margin-left: 260px;
-  padding: 0;
-  min-height: 100vh;
-  background: transparent;
+  flex: 1;
+  margin-left: 250px;
+  padding: 20px;
+  background-color: #f9faff;
+}
+
+.admin-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  background-color: #f9faff;
+}
+
+.admin-loading .spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(0, 123, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: #007bff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
   .admin-main-content {
-    margin-left: 0;
+    margin-left: 60px;
   }
 }

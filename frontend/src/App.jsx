@@ -11,6 +11,7 @@ import Profile from './pages/Profile/Profile';
 import Admin from './pages/admin/admin';
 import Login from './pages/Login/Login';
 import Signup from './pages/Signup/Signup';
+import AdminLogin from './pages/admin/AdminLogin';
 
 function App() {
   const token = useSelector((state) => state.auth.token);
@@ -40,7 +41,10 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin/*" element={<Admin />} />
+        <Route path='/login' element={<Login />} />
+        <Route path='/signup' element={<Signup />} />
+        <Route path='/admin/login' element={<AdminLogin />} />
+        <Route path='/admin/*' element={<Admin />} />
       </Routes>
     </BrowserRouter>
   );
