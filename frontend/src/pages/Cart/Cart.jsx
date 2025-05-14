@@ -20,11 +20,15 @@ import {
 } from '@mui/material';
 import { updateQuantity, removeFromCart } from '../../store/slices/cartSlice';
 import CartCard from '../../components/CartCard/CartCard';
+import api from '../../api/axios';
+import { selectAuth } from '../../store/slices/authSlice';
 
 const Cart = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector(state => state.cart.items);
+  const { user, token } = useSelector(selectAuth);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
   
   const handleQuantityChange = (product, newQuantity) => {
     if (newQuantity >= 1) {
@@ -43,6 +47,7 @@ const Cart = () => {
 
   const handleOrderClick = () => {
     setIsModalOpen(true);
+    setOrderSuccess(false);
   };
 
   const handleCloseModal = () => {
@@ -158,47 +163,126 @@ const Cart = () => {
           outline: 'none', 
           borderRadius: '8px' 
         }}>
-          <Typography variant="h5" gutterBottom align="center">
-            Order Summary
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Item</TableCell>
-                  <TableCell align="right">Quantity</TableCell>
-                  <TableCell align="right">Price</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {cartItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.title}</TableCell>
-                    <TableCell align="right">{item.quantity}</TableCell>
-                    <TableCell align="right">₹{(item.price * item.quantity).toLocaleString('en-IN')}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Divider sx={{ my: 2 }} />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body1">Subtotal:</Typography>
-            <Typography variant="body1">₹{subtotal.toLocaleString('en-IN')}</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h6">Total:</Typography>
-            <Typography variant="h6" color="primary">₹{subtotal.toLocaleString('en-IN')}</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button variant="outlined" onClick={handleCloseModal}>
-              Cancel
-            </Button>
-            <Button variant="contained" color="primary">
-              Confirm Order
-            </Button>
-          </Box>
+          {!orderSuccess ? (
+            <>
+              <Typography variant="h5" gutterBottom align="center">
+                Order Summary
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Item</TableCell>
+                      <TableCell align="right">Quantity</TableCell>
+                      <TableCell align="right">Price</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {cartItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.title}</TableCell>
+                        <TableCell align="right">{item.quantity}</TableCell>
+                        <TableCell align="right">₹{(item.price * item.quantity).toLocaleString('en-IN')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Divider sx={{ my: 2 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body1">Subtotal:</Typography>
+                <Typography variant="body1">₹{subtotal.toLocaleString('en-IN')}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h6">Total:</Typography>
+                <Typography variant="h6" color="primary">₹{subtotal.toLocaleString('en-IN')}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Button variant="outlined" onClick={handleCloseModal}>
+                  Cancel
+                </Button>
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  onClick={async () => {
+                    try {
+                      // Collect order data
+                      const orderData = {
+                        user: user,
+                        items: cartItems.map(item => ({
+                          productId: item._id ? item._id.toString() : item.id.toString(),
+                          title: item.title,
+                          quantity: item.quantity,
+                          price: item.price,
+                        })),
+                        subtotal,
+                        shipping,
+                        total,
+                      };
+
+                      // Call backend API to create order
+                      const response = await api.post('/orders', orderData);
+
+                      if (response.status === 201) {
+                        setOrderSuccess(true);
+                        // Optionally clear cart here or keep it as is
+                        // dispatch(clearCart());
+                      } else {
+                        alert('Failed to create order. Please try again.');
+                      }
+                    } catch (error) {
+                      console.error('Error creating order:', error);
+                      alert('Error creating order. Please try again.');
+                    }
+                  }}
+                >
+                  Confirm Order
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h5" gutterBottom color="success.main">
+                Order Confirmed!
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Thank you for your purchase. Your order has been placed successfully.
+              </Typography>
+              <Box
+                component="div"
+                sx={{
+                  width: 80,
+                  height: 80,
+                  margin: 'auto',
+                  borderRadius: '50%',
+                  backgroundColor: 'success.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: 'pulse 1.5s infinite'
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="40"
+                  height="40"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="feather feather-check"
+                  viewBox="0 0 24 24"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </Box>
+              <Button variant="contained" sx={{ mt: 3 }} onClick={handleCloseModal}>
+                Close
+              </Button>
+            </Box>
+          )}
         </Paper>
       </Modal>
     </Box>
