@@ -32,8 +32,13 @@ const Cart = () => {
 
   const handleOrderConfirmation = async () => {
     try {
+      console.log('Preparing order data...');
       const orderData = {
-        user: user,
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+        },
         items: cartItems.map(item => ({
           productId: item._id || item.id,
           title: item.title,
@@ -45,17 +50,22 @@ const Cart = () => {
         total,
       };
 
-      const response = await api.post('/orders', orderData); // Ensure the endpoint is correct
+      console.log('Sending order data to backend:', orderData);
+      const response = await api.post('/orders', orderData);
 
       if (response.status === 201) {
-        dispatch(clearCart()); // Clear the cart in Redux
+        console.log('Order created successfully:', response.data);
         await api.post('/user/cart/clear'); // Clear the cart in the backend
+        console.log('Cart cleared in backend');
+        dispatch(clearCart()); // Clear the cart in Redux
+        console.log('Cart cleared in Redux');
         setOrderSuccess(true); // Show the confirmation message
       } else {
-        alert('Failed to create order. Please try again.');
+        console.error('Failed to create order. Response:', response);
+        throw new Error('Failed to create order. Please try again.');
       }
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('Error during order confirmation:', error);
       alert('Error creating order. Please try again.');
     }
   };

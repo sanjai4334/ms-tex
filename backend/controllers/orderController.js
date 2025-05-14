@@ -43,6 +43,32 @@ const createOrder = async (req, res) => {
   }
 };
 
+const getOrdersByUser = async (req, res) => {
+  try {
+    const { email, firstName, lastName } = req.query;
+
+    if (!email || !firstName || !lastName) {
+      return res.status(400).json({ message: 'Missing required query parameters' });
+    }
+
+    const orders = await Order.find({
+      'user.email': email,
+      'user.firstName': firstName,
+      'user.lastName': lastName,
+    });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: 'No orders found for this user' });
+    }
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching orders for user:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
-  createOrder
+  createOrder,
+  getOrdersByUser,
 };
