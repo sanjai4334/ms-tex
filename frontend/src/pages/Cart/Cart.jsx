@@ -60,6 +60,7 @@ const Cart = () => {
         dispatch(clearCart()); // Clear the cart in Redux
         console.log('Cart cleared in Redux');
         setOrderSuccess(true); // Show the confirmation message
+        window.location.href = '/shop'; 
       } else {
         console.error('Failed to create order. Response:', response);
         throw new Error('Failed to create order. Please try again.');
@@ -87,7 +88,6 @@ const Cart = () => {
 
   const handleOrderClick = () => {
     setIsModalOpen(true);
-    setOrderSuccess(false);
   };
 
   const handleCloseModal = () => {
