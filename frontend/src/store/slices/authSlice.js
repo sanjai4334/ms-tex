@@ -84,6 +84,26 @@ export const saveUserDataOnLogout = createAsyncThunk(
   }
 );
 
+// New async thunk to fetch user profile data
+export const fetchUserProfile = createAsyncThunk(
+  'auth/fetchUserProfile',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+      if (!token) {
+        return rejectWithValue('No auth token found');
+      }
+      const response = await axios.get('/user/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to fetch user profile');
+    }
+  }
+);
+
 const initialState = {
   user: getUserFromLocalStorage(),
   token: localStorage.getItem('token') || null,
@@ -97,7 +117,6 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout(state) {
-      // Note: We cannot dispatch async thunk here directly, so this should be handled in the component before dispatching logout
       state.user = null;
       state.token = null;
       state.refreshToken = null;
@@ -149,6 +168,24 @@ const authSlice = createSlice({
         setUserToLocalStorage(user);
       })
       .addCase(registerUser.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(fetchUserProfile.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const user = {
+          firstName: action.payload.firstName,
+          lastName: action.payload.lastName,
+          email: action.payload.email
+        };
+        state.user = user;
+        setUserToLocalStorage(user);
+      })
+      .addCase(fetchUserProfile.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       });
