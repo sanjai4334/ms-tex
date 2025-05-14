@@ -63,11 +63,12 @@ app.use('/api/auth', authLimiter, authRoutes);
 const workerRoutes = require('./routes/workerRoutes');
 app.use('/api/workers', workerRoutes);
 
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/user', userRoutes);
-
+// Order routes (add this for your OrdersManagement frontend)
 const orderRoutes = require('./routes/orderRoutes');
 app.use('/api/orders', orderRoutes);
+
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/user', userRoutes);
 
 // Error handler (should be last)
 app.use((err, req, res, next) => {

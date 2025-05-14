@@ -5,6 +5,7 @@ import ProductManagement from './ProductManagement';
 import WorkersManagement from './WorkersManagement';
 import AdminLogin from './AdminLogin';
 import './admin.css';
+import OrdersManagement from './OrdersManagement';
 
 function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -53,7 +54,7 @@ function Admin() {
         <Routes>
           <Route path="products" element={<ProductManagement />} />
           <Route path="workers" element={<WorkersManagement />} />
-          <Route path="orders" element={<div>Orders Management (Coming Soon)</div>} />
+          <Route path="orders" element={<OrdersManagement />} />
           <Route path="reports" element={<div>Reports (Coming Soon)</div>} />
           <Route path="*" element={<Navigate to="/admin/products" replace />} />
         </Routes>

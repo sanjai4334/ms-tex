@@ -1,0 +1,93 @@
+.orders-management {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+
+  h2 {
+    margin-bottom: 20px;
+    color: #333;
+  }
+
+  .loading {
+    font-size: 16px;
+    color: #666;
+  }
+
+  p {
+    font-size: 16px;
+    color: #999;
+  }
+
+  .orders-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .order-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    width: 300px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+    &.completed {
+      border-color: #4CAF50;
+      box-shadow: 0 0 10px #4CAF50;
+    }
+  }
+
+  .completed-tick {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: #4CAF50;
+    font-weight: bold;
+  }
+
+  .order-items {
+    margin: 10px 0;
+
+    ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+  }
+
+  .order-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+
+    button {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+
+      &:first-child {
+        background-color: #4CAF50;
+        color: white;
+
+        &:disabled {
+          background-color: #a5d6a7;
+          cursor: not-allowed;
+        }
+      }
+
+      &:last-child {
+        background-color: #f44336;
+        color: white;
+      }
+    }
+  }
+}
