@@ -4,5 +4,15 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  envDir: path.resolve(__dirname, '..')
+  envDir: path.resolve(__dirname, '..'),
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9999',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
+    }
+  }
 })
