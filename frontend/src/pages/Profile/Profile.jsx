@@ -46,12 +46,6 @@ export default function Profile() {
           >
             Order History
           </Button>
-          <Button 
-            fullWidth 
-            variant="outlined"
-          >
-            Edit Profile
-          </Button>
         </Box>
       </Box>
     </Container>
