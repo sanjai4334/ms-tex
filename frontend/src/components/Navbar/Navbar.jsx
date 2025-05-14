@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, selectAuth } from '../../features/auth/authSlice';
+import { logout, selectAuth, saveUserDataOnLogout } from '../../store/slices/authSlice';
 import { toast } from 'react-toastify';
 import {
   Drawer,
@@ -31,10 +31,15 @@ function Navbar({ children }) {
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    toast.success('Logged out successfully');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await dispatch(saveUserDataOnLogout()).unwrap();
+      dispatch(logout());
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      toast.error('Failed to save user data before logout');
+    }
   };
 
   const drawerWidth = isCollapsed ? 80 : 240;

@@ -1,8 +1,19 @@
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
 import { Container, Typography, Box, Button, Avatar } from '@mui/material';
+import { fetchUserProfile } from '../../store/slices/authSlice';
 
 export default function Profile() {
-  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { user, status } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    dispatch(fetchUserProfile());
+  }, [dispatch]);
+
+  if (status === 'loading') {
+    return <Typography>Loading user data...</Typography>;
+  }
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>

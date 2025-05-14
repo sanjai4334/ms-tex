@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   Box, 
@@ -9,6 +9,14 @@ import {
   Button,
   Divider,
   Stack,
+  Modal,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import { updateQuantity, removeFromCart } from '../../store/slices/cartSlice';
 import CartCard from '../../components/CartCard/CartCard';
@@ -16,6 +24,7 @@ import CartCard from '../../components/CartCard/CartCard';
 const Cart = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector(state => state.cart.items);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const handleQuantityChange = (product, newQuantity) => {
     if (newQuantity >= 1) {
@@ -31,6 +40,14 @@ const Cart = () => {
     sum + (item.price * item.quantity), 0);
   const shipping = subtotal > 100 ? 0 : 10;
   const total = subtotal + shipping;
+
+  const handleOrderClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -112,8 +129,9 @@ const Cart = () => {
                 width: '180px',
                 whiteSpace: 'nowrap'
               }}
+              onClick={handleOrderClick}
             >
-              Checkout
+              Order
             </Button>
           </Box>
         </CardContent>
@@ -130,6 +148,59 @@ const Cart = () => {
           </Grid>
         ))}
       </Grid>
+
+      <Modal open={isModalOpen} onClose={handleCloseModal}>
+        <Paper sx={{ 
+          maxWidth: '600px', 
+          margin: 'auto', 
+          mt: '10%', 
+          p: 3, 
+          outline: 'none', 
+          borderRadius: '8px' 
+        }}>
+          <Typography variant="h5" gutterBottom align="center">
+            Order Summary
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Item</TableCell>
+                  <TableCell align="right">Quantity</TableCell>
+                  <TableCell align="right">Price</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {cartItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.title}</TableCell>
+                    <TableCell align="right">{item.quantity}</TableCell>
+                    <TableCell align="right">₹{(item.price * item.quantity).toLocaleString('en-IN')}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Divider sx={{ my: 2 }} />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body1">Subtotal:</Typography>
+            <Typography variant="body1">₹{subtotal.toLocaleString('en-IN')}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h6">Total:</Typography>
+            <Typography variant="h6" color="primary">₹{subtotal.toLocaleString('en-IN')}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Button variant="outlined" onClick={handleCloseModal}>
+              Cancel
+            </Button>
+            <Button variant="contained" color="primary">
+              Confirm Order
+            </Button>
+          </Box>
+        </Paper>
+      </Modal>
     </Box>
   );
 };
