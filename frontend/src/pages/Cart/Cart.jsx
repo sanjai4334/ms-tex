@@ -18,7 +18,7 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
-import { updateQuantity, removeFromCart } from '../../store/slices/cartSlice';
+import { updateQuantity, removeFromCart, clearCart } from '../../store/slices/cartSlice';
 import CartCard from '../../components/CartCard/CartCard';
 import api from '../../api/axios';
 import { selectAuth } from '../../store/slices/authSlice';
@@ -29,7 +29,37 @@ const Cart = () => {
   const { user, token } = useSelector(selectAuth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  
+
+  const handleOrderConfirmation = async () => {
+    try {
+      const orderData = {
+        user: user,
+        items: cartItems.map(item => ({
+          productId: item._id || item.id,
+          title: item.title,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal,
+        shipping,
+        total,
+      };
+
+      const response = await api.post('/orders', orderData); // Ensure the endpoint is correct
+
+      if (response.status === 201) {
+        dispatch(clearCart()); // Clear the cart in Redux
+        await api.post('/user/cart/clear'); // Clear the cart in the backend
+        setOrderSuccess(true); // Show the confirmation message
+      } else {
+        alert('Failed to create order. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Error creating order. Please try again.');
+    }
+  };
+
   const handleQuantityChange = (product, newQuantity) => {
     if (newQuantity >= 1) {
       dispatch(updateQuantity({ id: product.id, quantity: newQuantity }));
@@ -154,7 +184,7 @@ const Cart = () => {
         ))}
       </Grid>
 
-      <Modal open={isModalOpen} onClose={handleCloseModal}>
+      <Modal open={isModalOpen} onClose={orderSuccess ? null : handleCloseModal}>
         <Paper sx={{ 
           maxWidth: '600px', 
           margin: 'auto', 
@@ -205,37 +235,7 @@ const Cart = () => {
                 <Button 
                   variant="contained" 
                   color="primary"
-                  onClick={async () => {
-                    try {
-                      // Collect order data
-                      const orderData = {
-                        user: user,
-                        items: cartItems.map(item => ({
-                          productId: item._id ? item._id.toString() : item.id.toString(),
-                          title: item.title,
-                          quantity: item.quantity,
-                          price: item.price,
-                        })),
-                        subtotal,
-                        shipping,
-                        total,
-                      };
-
-                      // Call backend API to create order
-                      const response = await api.post('/orders', orderData);
-
-                      if (response.status === 201) {
-                        setOrderSuccess(true);
-                        // Optionally clear cart here or keep it as is
-                        // dispatch(clearCart());
-                      } else {
-                        alert('Failed to create order. Please try again.');
-                      }
-                    } catch (error) {
-                      console.error('Error creating order:', error);
-                      alert('Error creating order. Please try again.');
-                    }
-                  }}
+                  onClick={handleOrderConfirmation}
                 >
                   Confirm Order
                 </Button>
@@ -278,9 +278,6 @@ const Cart = () => {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </Box>
-              <Button variant="contained" sx={{ mt: 3 }} onClick={handleCloseModal}>
-                Close
-              </Button>
             </Box>
           )}
         </Paper>
