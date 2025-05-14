@@ -20,7 +20,7 @@ function OrdersManagement() {
           Authorization: `Bearer ${adminToken}`
         }
       };
-      const { data } = await axios.get('/api/orders', config);
+      const { data } = await axios.get('/orders', config);
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -40,7 +40,7 @@ function OrdersManagement() {
             Authorization: `Bearer ${adminToken}`
           }
         };
-        await axios.delete(`/api/orders/${orderId}`, config);
+        await axios.delete(`/orders/${orderId}`, config);
         toast.success('Order deleted successfully');
         fetchOrders();
       } catch (error) {
@@ -58,7 +58,7 @@ function OrdersManagement() {
           Authorization: `Bearer ${adminToken}`
         }
       };
-      await axios.put(`/api/orders/${orderId}/complete`, {}, config);
+      await axios.put(`/orders/${orderId}/complete`, {}, config);
       toast.success('Order marked as completed');
       fetchOrders();
     } catch (error) {
