@@ -5,5 +5,7 @@ const protect = require('../middleware/authMiddleware');
 
 // Protected route to get all orders
 router.route('/').get(protect, getOrders);
+// Ensure this route is defined
+router.post('/', protect, orderController.createOrder);
 
 module.exports = router;
