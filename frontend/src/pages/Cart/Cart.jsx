@@ -113,7 +113,7 @@ const Cart = () => {
                 whiteSpace: 'nowrap'
               }}
             >
-              Checkout
+              Order
             </Button>
           </Box>
         </CardContent>
