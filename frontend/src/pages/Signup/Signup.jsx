@@ -6,10 +6,8 @@ import {
   Container,
   TextField,
   Typography,
-  Divider,
   Alert
 } from '@mui/material';
-import { Google, Facebook } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser } from '../../store/slices/authSlice';
 
@@ -135,27 +133,6 @@ export default function Signup() {
           >
             {status === 'loading' ? 'Creating Account...' : 'Create Account'}
           </Button>
-
-          <Divider sx={{ my: 3 }}>OR</Divider>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Google />}
-              sx={{ maxWidth: 300, py: 1.5 }}
-            >
-              Continue with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Facebook />}
-              sx={{ maxWidth: 300, py: 1.5 }}
-            >
-              Continue with Facebook
-            </Button>
-          </Box>
 
           <Typography align="center" sx={{ mt: 3 }}>
             Already have an account?{' '}
